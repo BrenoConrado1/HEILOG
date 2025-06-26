@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEILOG - Assistente de Logística</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tone.js para efeitos sonoros -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+
+    <!-- Firebase -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- SUA CONFIGURAÇÃO DO FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyB9B2-xYb6gr92cQDbajriQiinfQurrOwI",
+            authDomain: "heilog-logistica.firebaseapp.com",
+            projectId: "heilog-logistica",
+            storageBucket: "heilog-logistica.appspot.com",
+            messagingSenderId: "790492229739",
+            appId: "1:790492229739:web:de49887de535a839e8412e"
+        };
+        const appId = "heilog-logistica"; // Pega o appId da configuração
+        // ------------------------------------
+
+        // Inicializa o Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        setLogLevel('debug');
+
+        // Garante que o usuário esteja autenticado (anonimamente se necessário)
+         onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log("Firebase Auth pronta. UID:", user.uid);
+                window.isAuthReady = true;
+            }
+        });
+
+        const authenticate = async () => {
+             await signInAnonymously(auth);
+        };
+        authenticate();
+
+
+        // Torna o 'db' e 'appId' acessíveis globalmente para outras funções no script
+        window.db = db;
+        window.appId = appId;
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --heineken-green: #00904A;
+            --heineken-red: #E50025;
+            --dark-bg: #174017;
+            --text-light: #f3f4f6;
+        }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--dark-bg); color: var(--text-light); }
+        .font-title { font-family: 'Oswald', sans-serif; }
+        .transition-all { transition: all 0.3s ease-in-out; }
+        .card { background-color: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .form-input, .form-select { background-color: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; }
+        .form-input:focus, .form-select:focus { border-color: var(--heineken-green); box-shadow: 0 0 0 2px rgba(0, 144, 74, 0.5); outline: none; }
+        .btn-green { background-color: var(--heineken-green); color: white; font-weight: bold; }
+        .btn-green:hover { background-color: #007a3f; }
+        #call-panel-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        #call-panel-content { padding: 3rem; border-radius: 1rem; text-align: center; color: #1a202c; animation: fadeIn 0.3s ease-out; }
+        @media print {
+            body * { visibility: hidden; }
+            #printable-area, #printable-area * { visibility: visible; }
+            #printable-area { position: absolute; left: 0; top: 0; width: 100%; }
+            .print-main-container { border: 4px solid black !important; padding: 1rem; color: black !important; }
+            #app-container, #call-panel-overlay { display: none; }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Painel de Chamada -->
+    <div id="call-panel-overlay">
+        <div id="call-panel-content" class="w-full max-w-2xl">
+            <h2 id="call-panel-message" class="text-4xl md:text-6xl font-bold uppercase mb-6"></h2>
+            <button id="close-panel-btn" class="bg-white/80 hover:bg-white text-gray-800 font-bold py-3 px-8 rounded-lg transition-all">Fechar</button>
+        </div>
+    </div>
+
+    <div id="app-container" class="min-h-screen flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-md card shadow-2xl rounded-2xl p-8 space-y-6">
+            <div class="text-center">
+                <svg class="w-20 h-20 mx-auto mb-2" viewBox="0 0 24 24" fill="#E50025" xmlns="http://www.w3.org/2000/svg"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z"/></svg>
+                <h1 class="font-title text-5xl font-bold text-white uppercase tracking-wider">HEILOG</h1>
+                <p class="text-gray-400 mt-1">Seu assistente de logística.</p>
+            </div>
+            <div class="space-y-4">
+                <label for="dt-input" class="font-semibold text-white">Consultar Documento de Transporte (DT)</label>
+                <div class="flex gap-2">
+                    <input type="text" id="dt-input" placeholder="Digite o número do DT" class="form-input w-full rounded-lg p-3 placeholder-gray-500 transition-all">
+                    <button id="search-button" class="btn-green py-3 px-5 rounded-lg flex items-center justify-center transition-all disabled:opacity-50 disabled:bg-gray-600 disabled:cursor-not-allowed">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div id="results-area" class="pt-4 min-h-[5rem]"></div>
+            <div class="text-center pt-4 border-t border-gray-700/50">
+                <p id="file-status" class="text-yellow-400 text-xs h-4"></p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="printable-area"></div>
+
+    <script type="module">
+        // Importar funções do Firestore SDK
+        import { doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Variáveis globais e elementos do DOM
+        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSHLJspPB5rUhpKWTUFGrtMeksd24eu1-I_l5S2qkhgFsie6cn1hITIUmr3k-ZuL4stm1x8MT0mC30s/pub?output=csv';
+        const CORS_PROXY_URL = 'https://api.allorigins.win/raw?url=';
+        const REFRESH_INTERVAL = 300000; // 5 minutos
+
+        const fileStatus = document.getElementById('file-status');
+        const dtInput = document.getElementById('dt-input');
+        const searchButton = document.getElementById('search-button');
+        const resultsArea = document.getElementById('results-area');
+        const callPanelOverlay = document.getElementById('call-panel-overlay');
+        const callPanelContent = document.getElementById('call-panel-content');
+        const callPanelMessage = document.getElementById('call-panel-message');
+        const closePanelBtn = document.getElementById('close-panel-btn');
+
+        let database = [];
+        let headers = [];
+        let headerMap = {};
+        let panelTimeout;
+        
+        searchButton.disabled = true;
+
+        window.addEventListener('load', () => {
+            loadDataFromSheet(false);
+            setInterval(() => {
+                if (!document.getElementById('generate-sheet-btn')) {
+                    loadDataFromSheet(true);
+                }
+            }, REFRESH_INTERVAL);
+        });
+        
+        async function loadDataFromSheet(isSilent = false) {
+            if (!isSilent) fileStatus.textContent = 'Conectando à planilha...';
+            try {
+                const targetUrl = `${GOOGLE_SHEET_CSV_URL}&t=${new Date().getTime()}`;
+                const proxiedUrl = `${CORS_PROXY_URL}${encodeURIComponent(targetUrl)}`;
+                const response = await fetch(proxiedUrl);
+                if (!response.ok) throw new Error(`Falha na rede: ${response.statusText}`);
+                const csvText = await response.text();
+                
+                parseCSV(csvText);
+                
+                const lastUpdatedTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                fileStatus.textContent = `Planilha atualizada às ${lastUpdatedTime}.`;
+                fileStatus.className = 'text-green-400 text-xs h-4';
+
+                if (searchButton.disabled) {
+                    searchButton.disabled = false;
+                    dtInput.focus();
+                }
+
+            } catch (error) {
+                const lastErrorTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                fileStatus.textContent = `Erro ao atualizar às ${lastErrorTime}.`;
+                fileStatus.className = 'text-red-400 text-xs h-4';
+                console.error("Erro ao buscar dados da planilha:", error);
+                if (!isSilent) displayError('Não foi possível conectar à planilha.');
+            }
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split(/\r?\n/);
+            if (lines.length < 2) return;
+            const parseLine = (line) => { const values = []; const regex = /("([^"]|"")*"|[^,]*)(,|$)/g; line.replace(regex, (match, p1) => { let value = p1; if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1).replace(/""/g, '"'); values.push(value.trim()); }); return values; };
+            headers = parseLine(lines[0]).map(h => h.toUpperCase().replace(/"/g, ''));
+            headerMap = { dts: headers[0], canal: headers[1], cliente: headers[2], produto: headers[3], descricao: headers[4], plt: headers[5], deposito: headers[6], transportadora: headers[7], data: headers[8], descarga: headers[9], xtAdicional: headers[10], agenda: headers[11], cpf: headers.find(h => h.includes('CPF')), motorista: headers.find(h => h.includes('MOTORISTA')), };
+            database = lines.slice(1).map(line => { if (line.trim() === '') return null; const values = parseLine(line); const entry = {}; headers.forEach((header, j) => { entry[header] = values[j] || ''; }); return entry; }).filter(Boolean);
+        }
+
+        function performSearch() {
+            const query = dtInput.value.trim();
+            if (!query) { displayError("Digite um número de DT para buscar."); return; }
+            if (database.length === 0) { displayError("Os dados da planilha ainda não foram carregados."); return; }
+            const results = database.filter(row => row[headerMap.dts]?.toLowerCase() === query.toLowerCase());
+            if (results.length > 0) {
+                const deposito = results[0][headerMap.deposito] || '';
+                const normalizedDeposito = deposito.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                if (normalizedDeposito.includes('FABRICA')) {
+                    window.showDriverForm(results);
+                } else {
+                    displayStandardResults(results);
+                }
+            } else {
+                displayNotFound(query);
+            }
+        }
+        
+        function displayStandardResults(dataArray) {
+             const firstResult = dataArray[0];
+             const dt = firstResult[headerMap.dts] || 'N/A';
+             const productListHtml = dataArray.map(item => `<div class="border-t border-gray-700/50 pt-2 mt-2"><p class="text-sm text-gray-400">Descrição do Produto</p><p class="text-lg">${item[headerMap.descricao] || 'N/A'}</p><p class="text-sm text-gray-400 mt-2">Quantidade</p><p class="text-lg">${item[headerMap.plt] || 'N/A'}</p></div>`).join('');
+             let resultsHtml = `<div class="bg-gray-800/80 p-6 rounded-xl border border-gray-700"><h3 class="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-2">Detalhes para o DTS: ${dt}</h3><div class="space-y-2 text-gray-300"><div><p class="text-sm text-gray-400">Destino</p><p class="text-lg">${firstResult[headerMap.deposito] || 'N/A'}</p></div>`;
+             if ((firstResult[headerMap.deposito] || '').toUpperCase() === 'HEILO') {
+                 resultsHtml += `<div class="pt-4 border-t border-gray-700/50"><p class="text-sm text-gray-400">Endereço de Entrega</p><p class="text-lg font-semibold">Rua Vereador Geraldo Nogueira da Silva, 5111, Caçapava, SP, 12280-001</p></div>`;
+             }
+             resultsHtml += `<h4 class="text-md font-semibold text-white pt-3">Itens da Carga:</h4>${productListHtml}</div></div>`;
+             resultsArea.innerHTML = resultsHtml;
+        }
+
+        window.showDriverForm = function(dataArray) {
+            const firstResult = dataArray[0] || {};
+            const isManual = !firstResult[headerMap.cliente];
+            resultsArea.innerHTML = `<div class="bg-blue-900/40 p-6 rounded-xl border border-blue-700"><h3 class="text-xl font-bold text-white mb-1">${isManual ? 'Marcação Manual de Fábrica' : 'Carregamento na Fábrica'}</h3><p class="text-blue-200 mb-4 text-sm">${isManual ? 'Preencha todos os dados.' : 'Preencha os dados do motorista.'}</p><div class="space-y-4">${isManual ? `<input type="text" id="manual-client" class="form-input w-full rounded-lg p-3" placeholder="Cliente"><select id="manual-type" class="form-select w-full rounded-lg p-3"><option value="">Tipo de Carga</option><option value="Bulk">Bulk</option><option value="Embalagem">Embalagem</option><option value="Latas">Latas</option><option value="Produto Acabado">Produto Acabado</option><option value="Descarga">Descarga</option></select><input type="text" id="manual-plt" class="form-input w-full rounded-lg p-3" placeholder="Quantidade (PLT)"><input type="text" id="manual-transportadora" class="form-input w-full rounded-lg p-3" placeholder="Transportadora"><select id="manual-canal" class="form-select w-full rounded-lg p-3"><option value="">Selecione o Canal</option><option value="Y001">Y001</option><option value="Y002">Y002</option><option value="Y004">Y004</option><option value="Y006">Y006</option><option value="Y055">Y055</option></select><hr class="border-gray-600">` : ''}<input type="text" id="driver-cpf" class="form-input w-full rounded-lg p-3" placeholder="Digite o CPF para buscar motorista"><input type="text" id="driver-name" class="form-input w-full rounded-lg p-3" placeholder="Nome Completo do Motorista"><input type="text" id="driver-phone" class="form-input w-full rounded-lg p-3" placeholder="Telefone com DDD"><div class="flex gap-4"><input type="text" id="driver-cnh" class="form-input w-full rounded-lg p-3" placeholder="Nº CNH"><input type="text" id="cnh-expiry" class="form-input w-full rounded-lg p-3" placeholder="Vencimento CNH (DD/MM/AAAA)"></div><div class="grid grid-cols-3 gap-4"><input type="text" id="truck-plate" class="form-input col-span-1 rounded-lg p-3" placeholder="Placa Cavalo"><input type="text" id="trailer-plate" class="form-input col-span-1 rounded-lg p-3" placeholder="Placa Carreta"><select id="truck-axles" class="form-select col-span-1 rounded-lg p-3"><option value="">Eixos</option><option value="2">2 Eixos</option><option value="3">3 Eixos</option><option value="4">4 Eixos</option><option value="5">5 Eixos</option><option value="6">6 Eixos</option><option value="7">7 Eixos</option><option value="9">9 Eixos</option></select></div><input type="text" id="driver-renavam" class="form-input w-full rounded-lg p-3" placeholder="RENAVAM"><div class="flex gap-4"><input type="text" id="invoice-number" class="form-input w-full rounded-lg p-3" placeholder="Nota Fiscal"><input type="text" id="unload-dt" class="form-input w-full rounded-lg p-3" placeholder="DT de Descarga"></div><button id="generate-sheet-btn" class="btn-green w-full py-3 rounded-lg">Imprimir e Chamar</button></div></div>`;
+            document.getElementById('driver-cpf').addEventListener('input', findAndFillDriver);
+            document.getElementById('generate-sheet-btn').addEventListener('click', () => generateAndPrintSheet(dataArray));
+        }
+
+        function findAndFillDriver(event) {
+            const cpf = event.target.value.replace(/\D/g, '');
+            if (cpf.length >= 11) {
+                const driverData = localStorage.getItem(`heilo-driver-${cpf}`);
+                if (driverData) {
+                    const parsedData = JSON.parse(driverData);
+                    document.getElementById('driver-name').value = parsedData.name || '';
+                    document.getElementById('driver-phone').value = parsedData.phone || '';
+                    document.getElementById('driver-cnh').value = parsedData.cnh || '';
+                    document.getElementById('cnh-expiry').value = parsedData.cnhExpiry || '';
+                    document.getElementById('truck-plate').value = parsedData.truckPlate || '';
+                    document.getElementById('trailer-plate').value = parsedData.trailerPlate || '';
+                    document.getElementById('truck-axles').value = parsedData.axles || '';
+                    document.getElementById('driver-renavam').value = parsedData.renavam || '';
+                    if (document.getElementById('manual-transportadora')) {
+                        document.getElementById('manual-transportadora').value = parsedData.transportadora || '';
+                    }
+                }
+            }
+        }
+        
+        async function saveDriverData(driverData, originalSheetData) {
+            const { db, appId } = window; // Pega instâncias do escopo global
+            if (!db || !appId || !window.isAuthReady) {
+                console.error("Firestore não está pronto!");
+                alert("Erro: Não foi possível conectar ao banco de dados para salvar a operação. Tente novamente.");
+                return false;
+            }
+
+            // 1. Salvar no LocalStorage (mantém comportamento original)
+            if (driverData.cpf) {
+                const cpf = driverData.cpf.replace(/\D/g, '');
+                localStorage.setItem(`heilo-driver-${cpf}`, JSON.stringify(driverData));
+            }
+            
+            // 2. Salvar no Firestore
+            try {
+                // O caminho da coleção pública é /artifacts/{appId}/public/data/{collectionName}
+                const docRef = doc(db, `artifacts/${appId}/public/data/patio`, driverData.dts);
+
+                const dataToSave = {
+                    dt: driverData.dts,
+                    motorista: driverData.name,
+                    transportadora: driverData.transportadora,
+                    cpf: driverData.cpf,
+                    placa: driverData.truckPlate,
+                    registrationTime: driverData.registrationTime,
+                    status: 'Em Pátio',
+                    // Dados da planilha original para cálculo de prioridade no painel
+                    agenda: originalSheetData[headerMap.agenda] || '',
+                    xtAdicional: originalSheetData[headerMap.xtAdicional] || '',
+                    data: originalSheetData[headerMap.data] || '',
+                    // Dados para exibição no painel
+                    origem: 'JACAREÍ/SP', // Pode ser fixo ou pego da planilha se disponível
+                    destino: originalSheetData[headerMap.deposito] || 'N/A',
+                };
+
+                await setDoc(docRef, dataToSave);
+                console.log(`Operação ${driverData.dts} salva no Firestore.`);
+                return true;
+            } catch (error) {
+                console.error("Erro ao salvar no Firestore: ", error);
+                alert(`Ocorreu um erro ao salvar a operação no painel: ${error.message}`);
+                return false;
+            }
+        }
+        
+        async function generateAndPrintSheet(originalDataArray) {
+            const isManual = !originalDataArray[0][headerMap.cliente];
+            const driverData = { name: document.getElementById('driver-name')?.value, cpf: document.getElementById('driver-cpf')?.value, phone: document.getElementById('driver-phone')?.value, cnh: document.getElementById('driver-cnh')?.value, cnhExpiry: document.getElementById('cnh-expiry')?.value, truckPlate: document.getElementById('truck-plate')?.value, trailerPlate: document.getElementById('trailer-plate')?.value, axles: document.getElementById('truck-axles')?.value, renavam: document.getElementById('driver-renavam')?.value, invoice: document.getElementById('invoice-number')?.value, unloadDt: document.getElementById('unload-dt')?.value, registrationTime: Date.now(), dts: originalDataArray[0][headerMap.dts], transportadora: isManual ? document.getElementById('manual-transportadora').value : originalDataArray[0][headerMap.transportadora] };
+            if (!driverData.name || !driverData.cpf) { resultsArea.insertAdjacentHTML('afterbegin', `<div id="temp-alert" class="bg-red-500 text-white p-3 rounded-lg mb-4">Nome e CPF do motorista são obrigatórios.</div>`); setTimeout(() => document.getElementById('temp-alert')?.remove(), 3000); return; }
+
+            const firstResult = originalDataArray[0] || {};
+            const priorityInfo = getPriorityInfo(firstResult);
+
+            const isSaved = await saveDriverData(driverData, firstResult);
+            if (!isSaved) return;
+
+            const sheetData = isManual ? [{ ...originalDataArray[0], [headerMap.cliente]: document.getElementById('manual-client').value, [headerMap.produto]: document.getElementById('manual-type').value, [headerMap.plt]: document.getElementById('manual-plt').value, [headerMap.transportadora]: document.getElementById('manual-transportadora').value, [headerMap.canal]: document.getElementById('manual-canal').value }] : originalDataArray;
+            buildPrintableSheet(driverData, sheetData, priorityInfo.isPriority, priorityInfo.isOtif, priorityInfo.isTop18, priorityInfo.isAntecipacao, priorityInfo.isGradeQueimada, priorityInfo.isAtrasado, isManual);
+            setTimeout(() => {
+                window.print();
+                showCallPanel(driverData.name, priorityInfo.isPriority || priorityInfo.isGradeQueimada || priorityInfo.isAtrasado);
+            }, 200);
+        }
+
+        function getPriorityInfo(sheetRow) {
+            let isPriority = false, isOtif = false, isTop18 = false, isAntecipacao = false, isGradeQueimada = false, isAtrasado = false;
+            if (!sheetRow) return { isPriority, isOtif, isTop18, isAntecipacao, isGradeQueimada, isAtrasado };
+            const getScheduledDateTime = (dateStr, timeStr) => { if (!dateStr || !dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/) || !timeStr || !timeStr.match(/^\d{1,2}:\d{2}:\d{2}$/)) return null; const [day, month, year] = dateStr.split('/'); const [hours, minutes, seconds] = timeStr.split(':'); return new Date(year, parseInt(month, 10) - 1, day, hours, minutes, seconds); };
+            const now = new Date(); const dateStr = sheetRow[headerMap.data]; const timeStr = sheetRow[headerMap.agenda]; const scheduledDateTime = getScheduledDateTime(dateStr, timeStr);
+            isTop18 = (sheetRow[headerMap.xtAdicional] || '').toUpperCase().includes('TOP');
+            if (scheduledDateTime) {
+                const diffMillis = now.getTime() - scheduledDateTime.getTime(); const diffHours = diffMillis / 3600000;
+                const today = new Date(now); today.setHours(0, 0, 0, 0); const scheduledDay = new Date(scheduledDateTime); scheduledDay.setHours(0, 0, 0, 0);
+                if (today < scheduledDay) { isAntecipacao = true; } 
+                else if (today.getTime() === scheduledDay.getTime()) {
+                    if (diffHours >= -2 && diffHours <= 1) { isOtif = true; } else if (diffHours > 1) { isAtrasado = true; }
+                } else if (today > scheduledDay) { isGradeQueimada = true; }
+            }
+            isPriority = isOtif || isTop18 || isAntecipacao;
+            return { isPriority, isOtif, isTop18, isAntecipacao, isGradeQueimada, isAtrasado };
+        }
+        
+        function buildPrintableSheet(driverData, sheetDataArray, isPriority, isOtif, isTop18, isAntecipacao, isGradeQueimada, isAtrasado, isManual) {
+            const now = new Date(); const printDate = now.toLocaleDateString('pt-BR'); const printTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); const firstResult = sheetDataArray[0];
+            let priorityHtml = '';
+            if (isGradeQueimada) { priorityHtml = `<div class="border-4 border-black text-center p-2" style="background-color: #FBBF24;"><h2 class="font-extrabold tracking-wider" style="font-size: 22px;">GRADE QUEIMADA</h2></div>`; }
+            else if (isAtrasado) { priorityHtml = `<div class="border-4 border-black text-center p-2" style="background-color: #FACC15;"><h2 class="font-extrabold tracking-wider" style="font-size: 22px;">ATRASADO</h2></div>`; }
+            else if (isPriority) { let reasons = []; if (isTop18) reasons.push("TOP 18"); if (isOtif) reasons.push("OTIF"); if (isAntecipacao) reasons.push("Antecipação"); priorityHtml = `<div class="border-4 border-black text-center p-2" style="background-color: #F87171;"><h2 class="font-extrabold tracking-wider" style="font-size: 22px;">PRIORIDADE</h2><p class="font-bold" style="font-size: 16px;">(${reasons.join(' / ')})</p></div>`; }
+            else { priorityHtml = `<div class="border border-black text-center p-1"><h2 class="font-bold tracking-wider">STATUS</h2><p style="font-size: 14px;">(Normal)</p></div>`; }
+            const allCanais = ['Y001', 'Y002', 'Y004', 'Y006', 'Y055']; const canaisHtml = allCanais.map(c => `${c === firstResult[headerMap.canal] ? '[X]' : '[&nbsp;&nbsp;]'} ${c}`).join(' ');
+            const productHeader = isManual ? "Tipo de Carga" : "Produto";
+            const productTableHtml = `<table class="w-full text-left text-sm border-collapse border border-black"><thead class="bg-gray-200"><tr><th class="border border-black p-1">${productHeader}</th><th class="border border-black p-1 text-center">Quantidade (PLT)</th></tr></thead><tbody>${sheetDataArray.map(item => `<tr><td class="border border-black p-1 font-bold">${item[headerMap.produto] || 'N/A'}</td><td class="border border-black p-1 text-center font-bold">${item[headerMap.plt] || 'N/A'}</td></tr>`).join('')}</tbody></table>`;
+            document.getElementById('printable-area').innerHTML = `<div class="p-2 bg-white text-black font-sans text-xs print-main-container"><header class="flex justify-between items-start mb-4 border-b-2 border-black pb-2"><div class="flex flex-col items-center"><div class="flex items-center gap-1"><span class="text-[9px] font-bold">EST.</span><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="#E50025"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span class="text-[9px] font-bold">1873</span></div><h1 class="text-3xl font-bold font-title tracking-wider">HEINEKEN</h1></div><div class="w-1/3 pt-1">${priorityHtml}</div></header><div class="text-center mb-2 text-sm"><p>CANAL: ${canaisHtml}</p></div><div class="mb-2 border border-black p-2"><table class="w-full text-left text-sm"><tr><td class="w-1/2 pr-8 align-top"><p><strong>DATA/HORA:</strong> ${printDate} ${printTime}</p><p><strong>MOTORISTA:</strong> ${driverData.name}</p><p><strong>CPF:</strong> ${driverData.cpf}</p><p><strong>PLACA:</strong> ${driverData.truckPlate}</p><p><strong>CARRETA 1:</strong> ${driverData.trailerPlate}</p><p><strong>EIXOS:</strong> ${driverData.axles || 'N/A'}</p><p><strong>CELULAR:</strong> ${driverData.phone}</p></td><td class="w-1/2 align-top"><p><strong>CLIENTE:</strong></p><p class="font-bold">${firstResult[headerMap.cliente] || 'N/A'}</p></td></tr></table></div><div class="mb-2">${productTableHtml}</div><table class="w-full border-collapse border-2 border-black mb-2"><thead><tr class="bg-gray-200"><th class="border border-black p-1">MOTORISTA</th><th class="border border-black p-1">Nº NOTA FISCAL</th><th class="border border-black p-1">Nº TRANSPORTE</th><th class="border border-black p-1">DT DESCARGA</th></tr></thead><tbody><tr><td class="border border-black p-1"><p>[ ] Carregamento</p><p>[ ] Descarregamento</p></td><td class="border border-black p-1 text-center text-lg font-bold align-middle">${driverData.invoice || '---'}</td><td class="border border-black p-1 text-center text-lg font-bold align-middle">${firstResult[headerMap.dts] || 'N/A'}</td><td class="border border-black p-1 text-center text-lg font-bold align-middle">${driverData.unloadDt || '---'}</td></tr><tr><td colspan="4" class="border border-black p-1 text-xs">[X] Eu, motorista, estou ciente das regras de segurança vigentes no armazém da HEINEKEN de Jacareí</td></tr></tbody></table><table class="w-full border-collapse border border-black mb-2 text-xs"><thead class="bg-gray-200 text-left"><tr><th class="border border-black p-1">PROCESSO</th><th class="border border-black p-1">RESPONSÁVEL</th><th class="border border-black p-1">NOME</th><th class="border border-black p-1 w-1/3">ASSINATURA</th></tr></thead><tbody><tr><td class="border border-black p-1 h-5">Confirmação</td><td class="border border-black p-1 text-center">Motorista</td><td class="border border-black p-1">${driverData.name}</td><td class="border border-black p-1"></td></tr><tr><td class="border border-black p-1 h-5">Recebimento</td><td class="border border-black p-1 text-center">Conferente</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr><tr><td class="border border-black p-1 h-5">Conferência</td><td class="border border-black p-1 text-center">Conferente</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr><tr><td class="border border-black p-1 h-5">Conferiu? [ ] SIM [ ] NÃO</td><td class="border border-black p-1 text-center"></td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr><tr><td class="border border-black p-1 h-5">Liberação</td><td class="border border-black p-1 text-center">Faturista/Conferente</td><td class="border border-black p-1"></td><td class="border border-black p-1"></td></tr></tbody></table><div class="border border-black p-2 mb-2"><h3 class="text-center font-bold mb-1">RESPEITE AS REGRAS DE SEGURANÇA:</h3><ul class="text-[9px] space-y-0.5" style="list-style-position: inside;"><li>Proibido o uso de adornos.</li><li>Obrigatório o uso de todos os EPIs: Capacetes c/ jugular, Botas de Segurança, Colete refletivo, Óculos de segurança, Luvas e Máscaras.</li><li>Obrigatório Uso das faixas de pedestres.</li><li>Obrigatória distância de 5m entre pessoas e empilhadeiras.</li><li>Respeitar procedimentos HEINEKEN, Colaboradores e Segurança Patrimonial.</li></ul></div><div class="border border-black p-2"><div class="flex justify-between items-center mb-1"><h2 class="text-base font-bold">★ HEINEKEN UNIDADE JACAREÍ</h2></div><div class="grid grid-cols-2 gap-x-4 gap-y-0 text-xs"><p><strong>DATA:</strong> ${printDate}</p><p><strong>HORA CHEGADA:</strong> ${printTime}</p><p><strong>NOME:</strong> ${driverData.name}</p><p><strong>CNH:</strong> ${driverData.cnh}</p><p><strong>CPF:</strong> ${driverData.cpf}</p><p><strong>TELEFONE:</strong> ${driverData.phone}</p><p><strong>EMPRESA:</strong> ${firstResult[headerMap.transportadora]}</p><p><strong>PLACA 1:</strong> ${driverData.truckPlate}</p><p><strong>PLACA 2:</strong> ${driverData.trailerPlate}</p><p><strong>EIXOS:</strong> ${driverData.axles || 'N/A'}</p><p><strong>RENAVAM:</strong> ${driverData.renavam || 'N/A'}</p><p><strong>NOTA FISCAL:</strong> ${driverData.invoice}</p><p><strong>SETOR:</strong></p></div></div></div>`;
+        }
+
+        function showCallPanel(driverName, isAlert) {
+            clearTimeout(panelTimeout);
+            callPanelMessage.innerHTML = `ATENÇÃO ${driverName},<br>Aguarde a ser chamado, iremos mandar mensagem no celular`;
+            if (isAlert) {
+                callPanelContent.style.backgroundColor = '#fecaca'; // Vermelho claro
+                playSound(true);
+            } else {
+                callPanelContent.style.backgroundColor = '#e5e7eb'; // gray-200
+                playSound(false);
+            }
+            callPanelOverlay.style.display = 'flex';
+            panelTimeout = setTimeout(resetApp, 7000);
+        }
+
+        function playSound(isPrioritySound) {
+            Tone.start().then(() => {
+                const synth = new Tone.Synth().toDestination();
+                if (isPrioritySound) {
+                    synth.triggerAttackRelease("C5", "8n", Tone.now());
+                    synth.triggerAttackRelease("G5", "8n", Tone.now() + 0.2);
+                } else {
+                    synth.triggerAttackRelease("C4", "8n", Tone.now());
+                }
+            });
+        }
+
+        function resetApp() {
+            callPanelOverlay.style.display = 'none';
+            resultsArea.innerHTML = '';
+            dtInput.value = '';
+            dtInput.focus();
+            clearTimeout(panelTimeout);
+        }
+        function displayError(message) {
+            resultsArea.innerHTML = `<div class="bg-red-900/50 border border-red-700 text-red-300 p-3 rounded-lg text-sm text-center"><p>${message}</p></div>`;
+        }
+        function displayNotFound(query) {
+            resultsArea.innerHTML = `<div class="bg-yellow-900/50 border border-yellow-700 text-yellow-300 p-4 rounded-xl text-center"><p class="font-semibold">DT "${query}" não encontrado na planilha.</p><button onclick="window.showDriverForm([{ '${headerMap.dts}': '${query}' }])" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-all">Criar Folha de Marcação Manual</button></div>`;
+        }
+
+        // --- Event Listeners ---
+        closePanelBtn.addEventListener('click', resetApp);
+        callPanelOverlay.addEventListener('click', (e) => { if (e.target === callPanelOverlay) resetApp(); });
+        searchButton.addEventListener('click', performSearch);
+        dtInput.addEventListener('keydown', e => { if (e.key === 'Enter') searchButton.click() });
+
+        // Disponibiliza funções globalmente para serem chamadas por botões inline (onclick)
+        window.generateAndPrintSheet = generateAndPrintSheet;
+    </script>
+</body>
+</html>
+
