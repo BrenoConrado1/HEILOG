@@ -1296,6 +1296,303 @@
       }
     }
 
+
+    /* ===== TEMA CLEAN / CLARO - ajuste visual solicitado ===== */
+    :root {
+      --clean-bg-1: #f4fbf6;
+      --clean-bg-2: #e7f5ec;
+      --clean-card: rgba(255,255,255,0.92);
+      --clean-card-strong: #ffffff;
+      --clean-border: rgba(22, 101, 52, 0.16);
+      --clean-text: #102a1b;
+      --clean-muted: #4b6356;
+      --drop-blue: #2563eb;
+      --drop-blue-dark: #1d4ed8;
+      --drop-blue-soft: rgba(37, 99, 235, 0.10);
+      --manobra-yellow: #facc15;
+      --manobra-orange: #f97316;
+    }
+
+    body.simple-ui {
+      color: var(--clean-text);
+      background:
+        radial-gradient(circle at top left, rgba(0, 144, 74, 0.10), transparent 28%),
+        radial-gradient(circle at top right, rgba(37, 99, 235, 0.10), transparent 26%),
+        linear-gradient(180deg, var(--clean-bg-1) 0%, var(--clean-bg-2) 100%);
+    }
+
+    .simple-ui .text-white,
+    .simple-ui .text-gray-200,
+    .simple-ui .text-gray-300,
+    .simple-ui .text-yellow-200 {
+      color: var(--clean-text) !important;
+    }
+
+    .simple-ui .card,
+    .card.workspace-card,
+    #plate-confirm-modal.card {
+      background: var(--clean-card);
+      color: var(--clean-text);
+      border-color: var(--clean-border);
+      box-shadow: 0 22px 60px rgba(15, 54, 28, 0.12);
+      backdrop-filter: blur(14px);
+    }
+
+    .simple-ui .section,
+    .simple-ui .flow-group,
+    .simple-ui .input-shell,
+    .simple-ui .form-hint-box,
+    .simple-ui .summary-item,
+    .simple-ui .last-cpf-btn,
+    .simple-ui .progress-step {
+      background: rgba(255,255,255,0.74);
+      border-color: var(--clean-border);
+      color: var(--clean-text);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);
+    }
+
+    .simple-ui .brand-block p,
+    .simple-ui .help,
+    .simple-ui .compact-note,
+    .simple-ui .mode-meta,
+    .simple-ui .summary-item .label,
+    .simple-ui .flow-group-title,
+    .simple-ui .input-label-inline,
+    .simple-ui .progress-step .kicker,
+    .simple-ui .last-cpf-kicker {
+      color: var(--clean-muted) !important;
+      opacity: 1;
+    }
+
+    .simple-ui .form-input,
+    .simple-ui .form-select,
+    .form-input,
+    .form-select {
+      background: #ffffff;
+      border-color: rgba(22, 101, 52, 0.22);
+      color: var(--clean-text);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.85);
+    }
+
+    .simple-ui .form-input::placeholder,
+    .simple-ui .form-select::placeholder {
+      color: rgba(75, 99, 86, 0.72);
+    }
+
+    .simple-ui .form-input:focus,
+    .simple-ui .form-select:focus,
+    .form-input:focus,
+    .form-select:focus {
+      border-color: var(--heineken-green);
+      box-shadow: 0 0 0 3px rgba(0, 144, 74, 0.18);
+    }
+
+    .simple-ui .btn-green,
+    .btn-green {
+      color: #ffffff !important;
+      background: linear-gradient(180deg, #00a65a, #008849);
+      border: 1px solid rgba(0, 112, 60, 0.20);
+      box-shadow: 0 10px 22px rgba(0, 144, 74, 0.18);
+    }
+
+    .simple-ui .btn-green:hover,
+    .btn-green:hover {
+      background: linear-gradient(180deg, #009f55, #007a3f);
+    }
+
+    .simple-ui .btn-ghost,
+    .btn-ghost,
+    .simple-ui .btn-clean {
+      background: #ffffff;
+      color: var(--clean-text) !important;
+      border-color: rgba(22, 101, 52, 0.18);
+      box-shadow: 0 8px 18px rgba(15, 54, 28, 0.08);
+    }
+
+    .simple-ui .btn-ghost:hover,
+    .btn-ghost:hover,
+    .simple-ui .btn-clean:hover {
+      background: #f5fbf7;
+      border-color: rgba(0, 144, 74, 0.32);
+    }
+
+    .simple-ui .system-pill {
+      background: #ffffff;
+      border-color: rgba(22, 101, 52, 0.16);
+      color: var(--clean-text);
+      box-shadow: 0 8px 18px rgba(15, 54, 28, 0.08);
+    }
+
+    .simple-ui .system-pill .status-text {
+      color: var(--clean-text) !important;
+    }
+
+    .simple-ui .progress-step.active {
+      background: rgba(0, 144, 74, 0.10);
+      border-color: rgba(0, 144, 74, 0.34);
+    }
+
+    .simple-ui .progress-index {
+      background: rgba(0, 144, 74, 0.10);
+      border-color: rgba(0, 144, 74, 0.18);
+      color: var(--clean-text);
+    }
+
+    .simple-ui .progress-step.active .progress-index,
+    .simple-ui .progress-step.done .progress-index {
+      color: #ffffff;
+      background: var(--heineken-green);
+      border-color: var(--heineken-green);
+    }
+
+    .simple-ui .mode-btn {
+      background: #ffffff;
+      border-color: rgba(22, 101, 52, 0.16);
+      box-shadow: 0 12px 28px rgba(15, 54, 28, 0.08);
+    }
+
+    .simple-ui .mode-btn:hover:not(:disabled) {
+      background: #f5fbf7;
+      border-color: rgba(0, 144, 74, 0.30);
+      box-shadow: 0 14px 30px rgba(15, 54, 28, 0.12);
+    }
+
+    .simple-ui .mode-title,
+    .simple-ui .progress-label,
+    .simple-ui .last-cpf-value,
+    .simple-ui .summary-item .value {
+      color: var(--clean-text) !important;
+    }
+
+    /* Botão Drop & Hook azul */
+    .simple-ui .mode-btn.drop-hook-btn {
+      background: linear-gradient(180deg, rgba(37, 99, 235, 0.98), rgba(29, 78, 216, 0.98));
+      border-color: rgba(30, 64, 175, 0.38);
+      box-shadow: 0 16px 32px rgba(37, 99, 235, 0.24);
+    }
+
+    .simple-ui .mode-btn.drop-hook-btn:hover:not(:disabled) {
+      background: linear-gradient(180deg, #3b82f6, var(--drop-blue-dark));
+      border-color: rgba(147, 197, 253, 0.78);
+      box-shadow: 0 18px 36px rgba(37, 99, 235, 0.32);
+    }
+
+    .simple-ui .mode-btn.drop-hook-btn .mode-title,
+    .simple-ui .mode-btn.drop-hook-btn .mode-meta,
+    .simple-ui .mode-btn.drop-hook-btn .mode-arrow {
+      color: #ffffff !important;
+    }
+
+    .simple-ui .mode-btn.drop-hook-btn .mode-icon {
+      background: rgba(255,255,255,0.18);
+      border-color: rgba(255,255,255,0.30);
+      color: #ffffff;
+    }
+
+
+    /* Ícones visuais escuros no menu de operações */
+    .simple-ui .mode-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff, #f3f4f6);
+      border: 1px solid rgba(31, 41, 55, 0.10);
+      color: #1f2937;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+    }
+
+    .simple-ui .mode-icon svg {
+      width: 28px;
+      height: 28px;
+      display: block;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.1;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .simple-ui .mode-btn.drop-hook-btn .mode-icon {
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(239,246,255,0.94));
+      border-color: rgba(15, 23, 42, 0.14);
+      color: #0f172a;
+    }
+
+    /* Campo/bloco Motorista Manobra em destaque */
+    .simple-ui .drop-hook-manobra-panel {
+      background: linear-gradient(135deg, rgba(250, 204, 21, 0.34), rgba(255, 255, 255, 0.88) 52%, rgba(249, 115, 22, 0.14));
+      border: 2px solid rgba(249, 115, 22, 0.55) !important;
+      box-shadow: 0 16px 34px rgba(249, 115, 22, 0.14), inset 0 1px 0 rgba(255,255,255,0.82);
+    }
+
+    .simple-ui .drop-hook-manobra-panel .step {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      padding: 6px 11px;
+      border-radius: 999px;
+      color: #7c2d12;
+      background: rgba(250, 204, 21, 0.65);
+      border: 1px solid rgba(249, 115, 22, 0.38);
+      letter-spacing: .08em;
+    }
+
+    .simple-ui .drop-hook-manobra-panel .big-title::before {
+      content: '⚠️ ';
+    }
+
+    .simple-ui .drop-hook-manobra-panel .summary-item:first-child,
+    .simple-ui .drop-hook-manobra-panel .summary-item:nth-child(2) {
+      background: rgba(255, 247, 237, 0.98);
+      border: 2px solid rgba(249, 115, 22, 0.48);
+      box-shadow: 0 8px 18px rgba(249, 115, 22, 0.12);
+    }
+
+    .simple-ui .drop-hook-manobra-panel .summary-item:first-child .label,
+    .simple-ui .drop-hook-manobra-panel .summary-item:nth-child(2) .label {
+      color: #9a3412 !important;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .plate-line {
+      background: #ffffff;
+      border-color: rgba(22, 101, 52, 0.16);
+      color: var(--clean-text);
+    }
+
+    .plate-line .label {
+      color: var(--clean-muted);
+      opacity: 1;
+    }
+
+    .plate-line .value {
+      color: var(--clean-text) !important;
+    }
+
+    .plate-line.manobra-plate-line {
+      background: linear-gradient(135deg, rgba(250, 204, 21, 0.36), rgba(255, 255, 255, 0.96));
+      border: 2px solid rgba(249, 115, 22, 0.58);
+      box-shadow: 0 12px 24px rgba(249, 115, 22, 0.14);
+    }
+
+    .plate-line.manobra-plate-line .label {
+      color: #9a3412;
+      font-weight: 900;
+    }
+
+    .plate-line.manobra-plate-line .value input {
+      background: #fff7ed;
+      border-color: rgba(249, 115, 22, 0.68);
+      color: #7c2d12;
+      font-weight: 900;
+    }
+
+    .simple-ui .sticky-actions {
+      background: linear-gradient(to top, rgba(244,251,246,1), rgba(244,251,246,0.78));
+    }
+
   </style>
 </head>
 
@@ -1419,7 +1716,29 @@
     let isAuthReady = false;
     let database = [];
     let headers = [];
-    let headerMap = {};
+    const DEFAULT_HEADER_MAP = {
+      dts: 'DTS',
+      canal: 'CANAL',
+      cliente: 'CLIENTE',
+      produto: 'PRODUTO',
+      descricao: 'DESCRICAO',
+      plt: 'PLT',
+      deposito: 'DEPOSITO',
+      transportadora: 'TRANSPORTADORA',
+      data: 'DATA',
+      agenda: 'AGENDA',
+      xtAdicional: 'XT_ADICIONAL'
+    };
+
+    let headerMap = { ...DEFAULT_HEADER_MAP };
+
+    function ensureHeaderMapDefaults() {
+      headerMap = { ...DEFAULT_HEADER_MAP, ...(headerMap || {}) };
+      Object.keys(DEFAULT_HEADER_MAP).forEach((key) => {
+        if (!headerMap[key]) headerMap[key] = DEFAULT_HEADER_MAP[key];
+      });
+      return headerMap;
+    }
     let panelTimeout;
     let cpfMask, phoneMask;
 
@@ -1995,6 +2314,7 @@
         motorista: headers.find(h => h.includes('MOTORISTA')),
       };
 
+      ensureHeaderMapDefaults();
       console.log('[HEILOG] headerMap selecionado:', headerMap);
 
       database = lines.slice(1).map(line => {
@@ -2687,7 +3007,7 @@
             <div class="flow-grid">
               <button data-mode="LOAD" class="mode-btn" title="Carregamento usando DT (consulta na planilha)">
                 <div class="mode-main">
-                  <div class="mode-icon">CR</div>
+                  <div class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 16V8h11v8"/><path d="M14 11h3l4 3v2h-7"/><circle cx="7.5" cy="17.5" r="1.8"/><circle cx="17.5" cy="17.5" r="1.8"/></svg></div>
                   <div class="mode-copy">
                     <div class="mode-title">Carregar</div>
                     <div class="mode-meta">Consulta a DT na planilha</div>
@@ -2698,7 +3018,7 @@
 
               <button data-mode="UNLOAD" class="mode-btn" title="Descarregamento com DT de descarga (sem planilha)">
                 <div class="mode-main">
-                  <div class="mode-icon">DC</div>
+                  <div class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v8H4z"/><path d="M12 13v6"/><path d="M9.5 16.5 12 19l2.5-2.5"/></svg></div>
                   <div class="mode-copy">
                     <div class="mode-title">Descarregar</div>
                     <div class="mode-meta">Fluxo direto, sem planilha</div>
@@ -2714,7 +3034,7 @@
             <div class="flow-grid">
               <button data-mode="RITMO" class="mode-btn" title="Baldeio: DT opcional (se vazio, gera ID interno)">
                 <div class="mode-main">
-                  <div class="mode-icon">BL</div>
+                  <div class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 7h11"/><path d="M15 4l3 3-3 3"/><path d="M17 17H6"/><path d="M9 14l-3 3 3 3"/></svg></div>
                   <div class="mode-copy">
                     <div class="mode-title">Baldeio</div>
                     <div class="mode-meta">Aceita operação com DT opcional</div>
@@ -2725,7 +3045,7 @@
 
               <button data-mode="DROP_HOOK" class="mode-btn drop-hook-btn" title="Drop & Hook: informe o CPF do motorista manobra e se também haverá descarga">
                 <div class="mode-main">
-                  <div class="mode-icon">DH</div>
+                  <div class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 7h4a3 3 0 0 1 0 6H9"/><path d="M17 17h-4a3 3 0 0 1 0-6h2"/><path d="M10 12h4"/></svg></div>
                   <div class="mode-copy">
                     <div class="mode-title">Drop & Hook</div>
                     <div class="mode-meta">Registra DROP, carga e retorno</div>
@@ -2736,7 +3056,7 @@
 
               <button data-mode="HIDROMAN" class="mode-btn" title="HIDROMAN: vai direto para o cadastro do motorista (sem planilha)">
                 <div class="mode-main">
-                  <div class="mode-icon">HD</div>
+                  <div class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3s4 4.7 4 8a4 4 0 1 1-8 0c0-3.3 4-8 4-8Z"/><path d="M18 16h2"/><path d="M17 19h4"/></svg></div>
                   <div class="mode-copy">
                     <div class="mode-title">HIDROMAN</div>
                     <div class="mode-meta">Fluxo dedicado, sem planilha</div>
@@ -2751,7 +3071,7 @@
             <div class="flow-group-title">Apoio</div>
             <button data-mode="INTEGRACAO" class="mode-btn" title="Teste de Integração (válido por 3 meses)">
               <div class="mode-main">
-                <div class="mode-icon">IN</div>
+                <div class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6l7-3Z"/><path d="m9.5 12 1.7 1.7 3.6-3.6"/></svg></div>
                 <div class="mode-copy">
                   <div class="mode-title">Integração</div>
                   <div class="mode-meta">Teste com validade de 3 meses</div>
@@ -3711,7 +4031,7 @@
           <div class="form-hint-box text-sm text-gray-200">O sistema reaproveita automaticamente o cadastro salvo do motorista.</div>
 
           ${isDropHookFlow ? `
-            <div class="section space-y-2 border border-yellow-400/30">
+            <div class="section space-y-2 border border-yellow-400/30 drop-hook-manobra-panel">
               <div class="step">DROP & HOOK</div>
               <div class="big-title text-white">Motoristas da operação</div>
               <div class="summary-grid">
@@ -4445,6 +4765,7 @@
         driverData.transportadora = 'HIDROMAN';
       }
 
+      ensureHeaderMapDefaults();
       const sheetData = isManual ? [{
         ...firstOriginal,
         [headerMap.dts]: dtToUse,
@@ -4453,7 +4774,14 @@
         [headerMap.plt]: driverData.isDropHook ? '' : (document.getElementById('manual-plt')?.value || ''),
         [headerMap.transportadora]: (document.getElementById('driver-transportadora')?.value || ''),
         [headerMap.canal]: (document.getElementById('manual-canal')?.value || ''),
-        [headerMap.deposito]: 'FÁBRICA'
+        [headerMap.deposito]: 'FÁBRICA',
+        DTS: dtToUse,
+        CLIENTE: driverData.isDropHook ? 'DROP & HOOK' : (document.getElementById('manual-client')?.value || ''),
+        PRODUTO: driverData.isDropHook ? '' : (document.getElementById('manual-type')?.value || manualPresetType || ''),
+        PLT: driverData.isDropHook ? '' : (document.getElementById('manual-plt')?.value || ''),
+        TRANSPORTADORA: (document.getElementById('driver-transportadora')?.value || ''),
+        CANAL: (document.getElementById('manual-canal')?.value || ''),
+        DEPOSITO: 'FÁBRICA'
       }] : originalDataArray;
 
       const firstRowForPriority = sheetData[0] || {};
@@ -4926,16 +5254,29 @@
     }
 
     function buildPrintableSheet(driverData, sheetDataArray, isPriority, isOtif, isTop18, isAntecipacao, isGradeQueimada, isAtrasado, isManual) {
+      ensureHeaderMapDefaults();
       const now = new Date();
       const printDate = now.toLocaleDateString('pt-BR');
       const printTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
       const firstResult = sheetDataArray[0] || {};
+      const dropHookDetectText = [
+        driverData?.isDropHook ? 'DROP_HOOK' : '',
+        driverData?.operacao || '',
+        driverData?.flowKey || '',
+        driverData?.flowLabel || '',
+        manualPresetType || '',
+        currentMode || '',
+        firstResult[headerMap.cliente] || '',
+        firstResult[headerMap.produto] || ''
+      ].join(' ').toUpperCase();
+      const isDropHookPrint = !!driverData?.isDropHook || dropHookDetectText.includes('DROP');
+      if (isDropHookPrint) driverData.isDropHook = true;
 
-      const productRaw = (firstResult[headerMap.produto] || '').toString().toUpperCase();
+      const productRaw = (isDropHookPrint ? '' : (firstResult[headerMap.produto] || '')).toString().toUpperCase();
       let operationTag = '';
       const transpUpper = ((driverData.transportadora || '') + '').toString().trim().toUpperCase();
-      if (driverData.isDropHook) operationTag = driverData.dropHookAlsoUnload ? 'DROP & HOOK - CARGA E DESCARGA' : 'DROP & HOOK - CARGA';
+      if (isDropHookPrint) operationTag = driverData.dropHookAlsoUnload ? 'DROP & HOOK - CARGA E DESCARGA' : 'DROP & HOOK - CARGA';
       else if (transpUpper === 'HIDROMAN') operationTag = 'HIDROMAN';
       else if (productRaw.includes('HIDROMAN')) operationTag = 'HIDROMAN';
       else if (productRaw.includes('BALDEIO') || productRaw.includes('RITMO')) operationTag = 'BALDEIO';
@@ -4953,24 +5294,24 @@
 
       const companyPrint = ((driverData.transportadora || '') + '').toString().trim();
       const vehicleTypePrint = ((driverData.vehicleType || '') + '').toString().trim();
-      const mainDriverPrint = driverData.isDropHook ? (driverData.motoristaViagem || {}) : {};
-      const manobraDriverPrint = driverData.isDropHook ? (driverData.motoristaManobra || {}) : {};
-      const mainDriverNamePrint = driverData.isDropHook ? (mainDriverPrint.nome || driverData.name || '') : (driverData.name || '');
-      const mainDriverCpfPrint = driverData.isDropHook ? (mainDriverPrint.cpf || driverData.cpf || '') : (driverData.cpf || '');
-      const mainDriverPhonePrint = driverData.isDropHook ? (mainDriverPrint.telefone || driverData.phone || '') : (driverData.phone || '');
-      const mainDriverCnhPrint = driverData.isDropHook ? (mainDriverPrint.cnh || driverData.cnh || '') : (driverData.cnh || '');
-      const mainTruckPlatePrint = driverData.isDropHook ? (mainDriverPrint.truckPlate || driverData.truckPlate || '') : (driverData.truckPlate || '');
-      const mainTrailerPlatePrint = driverData.isDropHook ? (mainDriverPrint.trailerPlate || driverData.trailerPlate || '') : (driverData.trailerPlate || '');
-      const mainVehicleTypePrint = driverData.isDropHook ? (mainDriverPrint.vehicleType || vehicleTypePrint || '') : vehicleTypePrint;
+      const mainDriverPrint = isDropHookPrint ? (driverData.motoristaViagem || {}) : {};
+      const manobraDriverPrint = isDropHookPrint ? (driverData.motoristaManobra || {}) : {};
+      const mainDriverNamePrint = isDropHookPrint ? (mainDriverPrint.nome || driverData.name || '') : (driverData.name || '');
+      const mainDriverCpfPrint = isDropHookPrint ? (mainDriverPrint.cpf || driverData.cpf || '') : (driverData.cpf || '');
+      const mainDriverPhonePrint = isDropHookPrint ? (mainDriverPrint.telefone || driverData.phone || '') : (driverData.phone || '');
+      const mainDriverCnhPrint = isDropHookPrint ? (mainDriverPrint.cnh || driverData.cnh || '') : (driverData.cnh || '');
+      const mainTruckPlatePrint = isDropHookPrint ? (mainDriverPrint.truckPlate || driverData.truckPlate || '') : (driverData.truckPlate || '');
+      const mainTrailerPlatePrint = isDropHookPrint ? (mainDriverPrint.trailerPlate || driverData.trailerPlate || '') : (driverData.trailerPlate || '');
+      const mainVehicleTypePrint = isDropHookPrint ? (mainDriverPrint.vehicleType || vehicleTypePrint || '') : vehicleTypePrint;
       const manobraPlatePrint = sanitizePlate(driverData.maneuverPlate || driverData.dropHookManeuverPlate || manobraDriverPrint.truckPlate || '');
       const rawTransport = (driverData.printableDt || '').toString().trim();
       // Drop & Hook: manter o campo Nº Transporte em branco para preencher na caneta.
-      const transportNumberPrint = driverData.isDropHook ? '' : rawTransport;
+      const transportNumberPrint = isDropHookPrint ? '' : rawTransport;
 
       const unloadDtRaw = (driverData.printableUnloadDt || '').toString().trim();
       const unloadDtPrint = unloadDtRaw ? unloadDtRaw : '';
 
-      const dropHookSimpleTermHtml = driverData.isDropHook ? `
+      const dropHookSimpleTermHtml = isDropHookPrint ? `
           <section style="border:2px solid #111; margin-bottom:6px; background:#fffdf5; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
             <div style="
               background:#fde68a !important;
@@ -5004,8 +5345,8 @@
       const rawAgendaTime = (firstResult[headerMap.agenda] || '').toString().trim();
       const agendaDatePrint = isManual ? printDate : (rawAgendaDate || printDate);
       const agendaTimePrint = isManual ? printTime : (rawAgendaTime || printTime);
-      const operationPanelTitle = driverData.isDropHook ? 'DADOS DO MOTORISTA MANOBRA' : 'DADOS DA OPERAÇÃO';
-      const operationPanelHtml = driverData.isDropHook ? `
+      const operationPanelTitle = isDropHookPrint ? 'DADOS DO MOTORISTA MANOBRA' : 'DADOS DA OPERAÇÃO';
+      const operationPanelHtml = isDropHookPrint ? `
                 <p><strong>MOTORISTA MANOBRA:</strong> ${escapeHtml(manobraDriverPrint.nome || '')}</p>
                 <p><strong>CPF:</strong> ${escapeHtml(manobraDriverPrint.cpf || '')}</p>
                 <p><strong>CELULAR:</strong> ${escapeHtml(manobraDriverPrint.telefone || '')}</p>
@@ -5070,13 +5411,13 @@
 
       const safeRows = sheetDataArray.length ? sheetDataArray : [{}];
       const rowsHtml = safeRows.map(item => {
-        const prod = driverData.isDropHook
+        const prod = isDropHookPrint
           ? ''
           : (isManual
             ? (isBaldeio ? '' : ((item[headerMap.produto] || '') || (operationTag || '')))
             : (item[headerMap.produto] || ''));
 
-        const qtd = driverData.isDropHook
+        const qtd = isDropHookPrint
           ? ''
           : (isManual
             ? (item[headerMap.plt] || '')
@@ -5139,7 +5480,7 @@
         };
       };
 
-      const checklistHtml = driverData.isDropHook
+      const checklistHtml = isDropHookPrint
         ? buildChecklistPrintPage(buildDropHookChecklistDriver(driverData, 'MANOBRA'), sheetDataArray, operationTag, printDate, printTime)
         : buildChecklistPrintPage(driverData, sheetDataArray, operationTag, printDate, printTime);
 
@@ -5227,7 +5568,7 @@
 
           <div style="display:grid; grid-template-columns: 1fr .74fr; gap:7px; margin-bottom:5px;">
             <section style="border:2px solid #111;">
-              <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:6px 9px; font-size:11.5px; font-weight:900; letter-spacing:.03em;">${driverData.isDropHook ? 'DADOS DO MOTORISTA VIAGEM E VEÍCULO' : 'DADOS DO MOTORISTA E VEÍCULO'}</div>
+              <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:6px 9px; font-size:11.5px; font-weight:900; letter-spacing:.03em;">${isDropHookPrint ? 'DADOS DO MOTORISTA VIAGEM E VEÍCULO' : 'DADOS DO MOTORISTA E VEÍCULO'}</div>
               <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0; padding:0;">
                 <div style="padding:7px 9px; line-height:1.34; border-right:1px solid #d4d4d4;">
                   <p><strong>DATA/HORA:</strong> ${printDate} ${printTime}</p>
@@ -5284,9 +5625,9 @@
             <tbody>
               <tr>
                 <td style="border:1px solid #cfcfcf; padding:6px 9px; line-height:1.6; width:25%;">
-                  <div>${driverData.isDropHook ? '[X]' : '[ ]'} Drop & Hook</div>
-                  <div>${driverData.isDropHook ? '[X]' : '[ ]'} Carregamento</div>
-                  <div>${driverData.isDropHook && driverData.dropHookAlsoUnload ? '[X]' : '[ ]'} Descarregamento</div>
+                  <div>${isDropHookPrint ? '[X]' : '[ ]'} Drop & Hook</div>
+                  <div>${isDropHookPrint ? '[X]' : '[ ]'} Carregamento</div>
+                  <div>${isDropHookPrint && driverData.dropHookAlsoUnload ? '[X]' : '[ ]'} Descarregamento</div>
                 </td>
                 <td style="border:1px solid #cfcfcf; padding:7px 9px; text-align:center; font-size:13px; font-weight:900;">${driverData.invoice || '---'}</td>
                 <td style="border:1px solid #cfcfcf; padding:7px 9px; text-align:center; font-size:13px; font-weight:900;">${transportNumberPrint || ''}</td>
@@ -5298,7 +5639,7 @@
             </tbody>
           </table>
 
-          ${driverData.isDropHook ? '' : `
+          ${isDropHookPrint ? '' : `
           <section style="border:2px solid #111; margin-bottom:6px;">
             <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:6px 9px; font-size:11.5px; font-weight:900; letter-spacing:.03em;">CHAMADO</div>
             <div style="padding:6px 11px; min-height:28px;">
@@ -5324,7 +5665,7 @@
                   <td style="border:1px solid #cfcfcf; padding:6px 7px;">${driverData.name}</td>
                   <td style="border:1px solid #cfcfcf; padding:7px 7px;"></td>
                 </tr>
-                ${driverData.isDropHook ? `
+                ${isDropHookPrint ? `
                   <tr>
                     <td style="border:1px solid #cfcfcf; padding:7px 7px;">Confirmação Drop & Hook</td>
                     <td style="border:1px solid #cfcfcf; padding:7px 7px; text-align:center;">Motorista Viagem</td>
@@ -5376,8 +5717,8 @@
             <div style="display:grid; grid-template-columns: 1fr 1fr; column-gap:22px; font-size:10.8px; line-height:1.34;">
               <div>
                 <p><strong>DATA:</strong> ${printDate}</p>
-                <p><strong>${driverData.isDropHook ? 'MOTORISTA VIAGEM' : 'MOTORISTA'}:</strong> ${driverData.isDropHook ? (driverData.motoristaViagem?.nome || driverData.name || '') : (driverData.name || '')}</p>
-                ${driverData.isDropHook ? `<p><strong>MOTORISTA MANOBRA:</strong> ${driverData.motoristaManobra?.nome || ''}</p>` : ''}
+                <p><strong>${isDropHookPrint ? 'MOTORISTA VIAGEM' : 'MOTORISTA'}:</strong> ${isDropHookPrint ? (driverData.motoristaViagem?.nome || driverData.name || '') : (driverData.name || '')}</p>
+                ${isDropHookPrint ? `<p><strong>MOTORISTA MANOBRA:</strong> ${driverData.motoristaManobra?.nome || ''}</p>` : ''}
                 <p><strong>TELEFONE:</strong> ${driverData.phone}</p>
                 <p><strong>PLACA 1:</strong> ${driverData.truckPlate}</p>
                 <p><strong>NOTA FISCAL:</strong> ${driverData.invoice || ''}</p>
