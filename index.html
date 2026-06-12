@@ -81,6 +81,22 @@
       letter-spacing: 0.08em;
     }
 
+    .plate-line.manobra-plate-line {
+      background: rgba(245, 158, 11, 0.18);
+      border-color: rgba(245, 158, 11, 0.62);
+      box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.08);
+    }
+
+    .plate-line.manobra-plate-line .label {
+      color: #fef3c7;
+      opacity: 1;
+    }
+
+    .plate-line.manobra-plate-line .value input {
+      border-color: rgba(251, 191, 36, 0.65);
+      background: rgba(146, 64, 14, 0.24);
+    }
+
 
     /* Checklist impresso após a marcação */
     .print-page-break {
@@ -1313,6 +1329,11 @@
           <div class="label text-gray-300">Placa da carreta</div>
           <div id="confirm-trailer-plate" class="value text-white">-</div>
         </div>
+
+        <div id="confirm-maneuver-plate-line" class="plate-line manobra-plate-line hidden">
+          <div class="label">Placa do manobra</div>
+          <div id="confirm-maneuver-plate" class="value text-white">-</div>
+        </div>
       </div>
 
       <div id="confirm-operation-summary" class="summary-grid"></div>
@@ -1439,6 +1460,7 @@
     let dropHookDtCarga = '';
     let dropHookManeuverCpf = '';
     let dropHookManeuverDriver = null;
+    let dropHookManeuverPlate = '';
     let dropHookAlsoUnload = false;
 
     // --- Integração (Teste a cada 3 meses) ---
@@ -1625,10 +1647,11 @@
         cavalo: document.getElementById('truck-plate')?.value || '',
         carreta: document.getElementById('trailer-plate')?.value || '',
         isDropHook: !!isDropHookFlow,
-        motoristaManobra: isDropHookFlow ? (sessionDriver?.name || document.getElementById('driver-name')?.value || '') : (document.getElementById('driver-name')?.value || sessionDriver?.name || ''),
-        cpfMotoristaManobra: isDropHookFlow ? (sessionCpf || normalizeDigits(document.getElementById('driver-cpf')?.value || '')) : (sessionCpf || normalizeDigits(document.getElementById('driver-cpf')?.value || '')),
-        motoristaViagem: isDropHookFlow ? (dropHookManeuverDriver?.name || '') : (dropHookTripDriver?.name || ''),
-        cpfMotoristaViagem: isDropHookFlow ? (dropHookManeuverCpf || '') : (dropHookTripCpf || ''),
+        motoristaManobra: isDropHookFlow ? (dropHookTripDriver?.name || sessionDriver?.name || '') : (document.getElementById('driver-name')?.value || sessionDriver?.name || ''),
+        cpfMotoristaManobra: isDropHookFlow ? (dropHookTripCpf || sessionCpf || '') : (sessionCpf || normalizeDigits(document.getElementById('driver-cpf')?.value || '')),
+        motoristaViagem: isDropHookFlow ? (document.getElementById('driver-name')?.value || dropHookManeuverDriver?.name || '') : (dropHookTripDriver?.name || ''),
+        cpfMotoristaViagem: isDropHookFlow ? (normalizeDigits(document.getElementById('driver-cpf')?.value || '') || dropHookManeuverCpf || '') : (dropHookTripCpf || ''),
+        placaManobra: isDropHookFlow ? (dropHookManeuverPlate || dropHookTripDriver?.truckPlate || sessionDriver?.truckPlate || '') : '',
         dropHookAlsoUnload: !!dropHookAlsoUnload
       };
     }
@@ -2280,6 +2303,7 @@
             contabilizarDescarga: driverData.dropHookAlsoUnload ? 1 : 0,
             motoristaManobraCpf: driverData.motoristaManobra?.cpf || driverData.dropHookManeuverCpf || '',
             motoristaManobra: driverData.motoristaManobra?.nome || driverData.dropHookManeuverDriver?.name || '',
+            placaManobra: driverData.maneuverPlate || driverData.dropHookManeuverPlate || driverData.motoristaManobra?.truckPlate || '',
             motoristaViagemCpf: driverData.motoristaViagem?.cpf || unmaskedCpf || '',
             motoristaViagem: driverData.motoristaViagem?.nome || driverData.name || '',
             termoResponsabilidade: 'Carregamento/manobra realizado por um motorista e viagem/retirada do produto por outro motorista.',
@@ -2643,6 +2667,7 @@
       dropHookDtCarga = '';
       dropHookManeuverCpf = '';
       dropHookManeuverDriver = null;
+      dropHookManeuverPlate = '';
       dropHookAlsoUnload = false;
 
       actionArea.innerHTML = `
@@ -2803,6 +2828,7 @@
       dropHookDtCarga = '';
       dropHookManeuverCpf = '';
       dropHookManeuverDriver = null;
+      dropHookManeuverPlate = '';
       dropHookAlsoUnload = false;
 
       const backBtn = `
@@ -3689,10 +3715,10 @@
               <div class="step">DROP & HOOK</div>
               <div class="big-title text-white">Motoristas da operação</div>
               <div class="summary-grid">
-                ${buildSummaryItem('Motorista manobra', dropHookManeuverDriver?.name || 'Não informado')}
-                ${buildSummaryItem('CPF manobra', dropHookManeuverCpf ? dropHookManeuverCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado')}
-                ${buildSummaryItem('Motorista viagem', sessionDriver?.name || 'Será preenchido abaixo')}
-                ${buildSummaryItem('CPF viagem', sessionCpf ? sessionCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado')}
+                ${buildSummaryItem('Motorista manobra', dropHookTripDriver?.name || sessionDriver?.name || 'Não informado')}
+                ${buildSummaryItem('CPF manobra', (dropHookTripCpf || sessionCpf) ? (dropHookTripCpf || sessionCpf).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado')}
+                ${buildSummaryItem('Motorista viagem', dropHookManeuverDriver?.name || 'Será preenchido abaixo')}
+                ${buildSummaryItem('CPF viagem', dropHookManeuverCpf ? dropHookManeuverCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado')}
                 ${buildSummaryItem('Vai descarregar também?', dropHookAlsoUnload ? 'SIM - contar carga e descarga' : 'NÃO - contar apenas carga')}
               </div>
               <div class="help">A folha impressa terá o termo de responsabilidade para portaria e checklist com os dois motoristas.</div>
@@ -3851,6 +3877,14 @@
         if (cpfMask) cpfMask.unmaskedValue = normalizeDigits(sessionCpf);
       }
       if (sessionDriver) fillFormFields(sessionDriver);
+
+      if (isDropHookFlow && dropHookManeuverDriver) {
+        // No Drop & Hook, o formulário principal representa o Motorista Viagem.
+        if (cpfMask) cpfMask.unmaskedValue = normalizeDigits(dropHookManeuverCpf || '');
+        else if (driverCpfEl) driverCpfEl.value = dropHookManeuverCpf || '';
+        fillFormFields(dropHookManeuverDriver);
+        dropHookManeuverPlate = sanitizePlate(dropHookManeuverPlate || dropHookTripDriver?.truckPlate || sessionDriver?.truckPlate || '');
+      }
 
       if (isManual) {
         const manualTypeEl = document.getElementById('manual-type');
@@ -4084,6 +4118,8 @@
         const plateConfirmOverlay = document.getElementById('plate-confirm-overlay');
         const confirmTruckPlate = document.getElementById('confirm-truck-plate');
         const confirmTrailerPlate = document.getElementById('confirm-trailer-plate');
+        const confirmManeuverPlateLine = document.getElementById('confirm-maneuver-plate-line');
+        const confirmManeuverPlate = document.getElementById('confirm-maneuver-plate');
         const confirmSummary = document.getElementById('confirm-operation-summary');
         const plateConfirmEditBtn = document.getElementById('plate-confirm-edit-btn');
         const plateConfirmPrintBtn = document.getElementById('plate-confirm-print-btn');
@@ -4097,12 +4133,13 @@
           !plateConfirmPrintBtn
         ) {
           console.error('Modal de confirmação das placas não encontrado no DOM.');
-          resolve({ confirmed: true, truckPlate: sanitizePlate(truckPlate), trailerPlate: sanitizePlate(trailerPlate) });
+          resolve({ confirmed: true, truckPlate: sanitizePlate(truckPlate), trailerPlate: sanitizePlate(trailerPlate), maneuverPlate: sanitizePlate(summary?.placaManobra || dropHookManeuverPlate || '') });
           return;
         }
 
         const truckInitial = sanitizePlate(truckPlate || '');
         const trailerInitial = sanitizePlate(trailerPlate || '');
+        const maneuverInitial = sanitizePlate(summary?.placaManobra || dropHookManeuverPlate || dropHookTripDriver?.truckPlate || sessionDriver?.truckPlate || '');
 
         confirmTruckPlate.innerHTML = `
           <input id="confirm-truck-plate-input" class="form-input input-xl rounded-lg w-full text-center uppercase"
@@ -4112,6 +4149,13 @@
           <input id="confirm-trailer-plate-input" class="form-input input-xl rounded-lg w-full text-center uppercase"
             maxlength="7" value="${escapeHtml(trailerInitial)}" placeholder="ABC1234 ou ABC1D23">
         `;
+        if (confirmManeuverPlateLine && confirmManeuverPlate) {
+          confirmManeuverPlateLine.classList.toggle('hidden', !summary.isDropHook);
+          confirmManeuverPlate.innerHTML = summary.isDropHook ? `
+            <input id="confirm-maneuver-plate-input" class="form-input input-xl rounded-lg w-full text-center uppercase"
+              maxlength="7" value="${escapeHtml(maneuverInitial)}" placeholder="ABC1234 ou ABC1D23">
+          ` : '-';
+        }
 
         confirmSummary.innerHTML = [
           buildSummaryItem('Motorista manobra', summary.isDropHook ? (summary.motoristaManobra || summary.motorista) : summary.motorista),
@@ -4126,12 +4170,14 @@
           buildSummaryItem('DT Descarga', summary.dtDescarga),
           buildSummaryItem('Transportadora', summary.transportadora),
           buildSummaryItem('Tipo de veículo', summary.tipoVeiculo),
+          ...(summary.isDropHook ? [buildSummaryItem('Placa do manobra', summary.placaManobra || maneuverInitial)] : []),
           buildSummaryItem('Cavalo', summary.cavalo),
           buildSummaryItem('Carreta', summary.carreta)
         ].join('');
 
         const truckInput = document.getElementById('confirm-truck-plate-input');
         const trailerInput = document.getElementById('confirm-trailer-plate-input');
+        const maneuverInput = document.getElementById('confirm-maneuver-plate-input');
         const applyPlateInput = (el) => {
           el?.addEventListener('input', (e) => {
             e.target.value = sanitizePlate(e.target.value);
@@ -4140,6 +4186,7 @@
         };
         applyPlateInput(truckInput);
         applyPlateInput(trailerInput);
+        applyPlateInput(maneuverInput);
 
         plateConfirmOverlay.style.display = 'flex';
         setTimeout(() => truckInput?.focus(), 50);
@@ -4167,6 +4214,7 @@
         plateConfirmPrintBtn.onclick = () => {
           const nextTruck = sanitizePlate(truckInput?.value || '');
           const nextTrailer = sanitizePlate(trailerInput?.value || '');
+          const nextManeuver = sanitizePlate(maneuverInput?.value || '');
 
           if (!isValidBrazilianPlate(nextTruck)) {
             truckInput?.classList.add('invalid');
@@ -4180,8 +4228,14 @@
             return;
           }
 
+          if (summary.isDropHook && nextManeuver && !isValidBrazilianPlate(nextManeuver)) {
+            maneuverInput?.classList.add('invalid');
+            maneuverInput?.focus();
+            return;
+          }
+
           cleanup();
-          resolve({ confirmed: true, truckPlate: nextTruck, trailerPlate: nextTrailer });
+          resolve({ confirmed: true, truckPlate: nextTruck, trailerPlate: nextTrailer, maneuverPlate: nextManeuver });
         };
 
         plateConfirmOverlay.onclick = (e) => {
@@ -4289,6 +4343,7 @@
 
       if (confirmedPlates.truckPlate) plateEl.value = confirmedPlates.truckPlate;
       if (trailerEl) trailerEl.value = confirmedPlates.trailerPlate || '';
+      if (isDropHookFlow) dropHookManeuverPlate = sanitizePlate(confirmedPlates.maneuverPlate || dropHookManeuverPlate || dropHookTripDriver?.truckPlate || sessionDriver?.truckPlate || '');
 
       const firstOriginal = originalDataArray[0] || {};
       const baseDt = String(firstOriginal[headerMap.dts] || '').trim();
@@ -4327,20 +4382,22 @@
         transportadora: ((document.getElementById('driver-transportadora')?.value || '').toString().trim()),
         isDropHook: !!isDropHookFlow || currentMode === 'DROP_HOOK',
         dropHookTripCpf: dropHookTripCpf || '',
-        dropHookTripDriver: dropHookTripDriver || null
+        dropHookTripDriver: dropHookTripDriver || null,
+        maneuverPlate: sanitizePlate(dropHookManeuverPlate || dropHookTripDriver?.truckPlate || sessionDriver?.truckPlate || ''),
+        dropHookManeuverPlate: sanitizePlate(dropHookManeuverPlate || dropHookTripDriver?.truckPlate || sessionDriver?.truckPlate || '')
       };
 
       driverData.motoristaManobra = driverData.isDropHook ? {
-        // No Drop & Hook, quem coloca o primeiro CPF é o motorista manobra.
-        nome: driverData.name || sessionDriver?.name || '',
-        cpf: normalizeDigits(driverData.cpf || sessionCpf),
-        telefone: normalizeDigits(driverData.phone || sessionDriver?.phone || ''),
-        cnh: driverData.cnh || sessionDriver?.cnh || '',
-        cnhExpiry: driverData.cnhExpiry || sessionDriver?.cnhExpiry || '',
-        transportadora: driverData.transportadora || sessionDriver?.transportadora || '',
-        truckPlate: sanitizePlate(driverData.truckPlate || ''),
-        trailerPlate: sanitizePlate(driverData.trailerPlate || ''),
-        vehicleType: driverData.vehicleType || ''
+        // No Drop & Hook, o CPF inicial da sessão é o motorista manobra.
+        nome: dropHookTripDriver?.name || sessionDriver?.name || '',
+        cpf: normalizeDigits(dropHookTripCpf || sessionCpf || ''),
+        telefone: normalizeDigits(dropHookTripDriver?.phone || sessionDriver?.phone || ''),
+        cnh: dropHookTripDriver?.cnh || sessionDriver?.cnh || '',
+        cnhExpiry: dropHookTripDriver?.cnhExpiry || sessionDriver?.cnhExpiry || '',
+        transportadora: dropHookTripDriver?.transportadora || sessionDriver?.transportadora || driverData.transportadora || '',
+        truckPlate: sanitizePlate(driverData.maneuverPlate || dropHookTripDriver?.truckPlate || sessionDriver?.truckPlate || ''),
+        trailerPlate: sanitizePlate(dropHookTripDriver?.trailerPlate || sessionDriver?.trailerPlate || ''),
+        vehicleType: dropHookTripDriver?.vehicleType || sessionDriver?.vehicleType || ''
       } : {
         nome: driverData.name || '',
         cpf: normalizeDigits(driverData.cpf),
@@ -4350,17 +4407,21 @@
       };
 
       driverData.motoristaViagem = driverData.isDropHook ? {
-        // O CPF informado no campo Drop & Hook é o motorista viagem.
-        nome: dropHookManeuverDriver?.name || '',
-        cpf: dropHookManeuverCpf || '',
-        telefone: normalizeDigits(dropHookManeuverDriver?.phone || ''),
-        cnh: dropHookManeuverDriver?.cnh || '',
-        cnhExpiry: dropHookManeuverDriver?.cnhExpiry || '',
-        transportadora: dropHookManeuverDriver?.transportadora || ''
+        // No formulário principal ficam os dados do motorista viagem.
+        nome: driverData.name || dropHookManeuverDriver?.name || '',
+        cpf: normalizeDigits(driverData.cpf || dropHookManeuverCpf || ''),
+        telefone: normalizeDigits(driverData.phone || dropHookManeuverDriver?.phone || ''),
+        cnh: driverData.cnh || dropHookManeuverDriver?.cnh || '',
+        cnhExpiry: driverData.cnhExpiry || dropHookManeuverDriver?.cnhExpiry || '',
+        transportadora: driverData.transportadora || dropHookManeuverDriver?.transportadora || '',
+        truckPlate: sanitizePlate(driverData.truckPlate || dropHookManeuverDriver?.truckPlate || ''),
+        trailerPlate: sanitizePlate(driverData.trailerPlate || dropHookManeuverDriver?.trailerPlate || ''),
+        vehicleType: driverData.vehicleType || dropHookManeuverDriver?.vehicleType || ''
       } : null;
 
       driverData.dropHookManeuverCpf = dropHookManeuverCpf || '';
       driverData.dropHookManeuverDriver = dropHookManeuverDriver || null;
+      driverData.dropHookManeuverPlate = driverData.maneuverPlate || '';
       driverData.dropHookAlsoUnload = !!dropHookAlsoUnload;
       driverData.contabilizarCarga = driverData.isDropHook ? 1 : 0;
       driverData.contabilizarDescarga = driverData.isDropHook && dropHookAlsoUnload ? 1 : 0;
@@ -4546,29 +4607,17 @@
               <div style="padding:8px 10px; border-right:1px solid #cfcfcf;"><strong>OPERAÇÃO:</strong><br>${escapeHtml(operationTag || driverData.operacao || 'Drop & Hook')}</div>
               <div style="padding:8px 10px; border-right:1px solid #cfcfcf;"><strong>DT:</strong><br>${escapeHtml(driverData.printableDt || driverData.dts || '')}</div>
               <div style="padding:8px 10px;"><strong>NOTA FISCAL:</strong><br>${escapeHtml(driverData.invoice || '')}</div>
-              <div style="padding:8px 10px; border-top:1px solid #cfcfcf; border-right:1px solid #cfcfcf;"><strong>CAVALO:</strong><br>${escapeHtml(driverData.truckPlate || '')}</div>
-              <div style="padding:8px 10px; border-top:1px solid #cfcfcf; border-right:1px solid #cfcfcf;"><strong>CARRETA:</strong><br>${escapeHtml(driverData.trailerPlate || '')}</div>
+              <div style="padding:8px 10px; border-top:1px solid #cfcfcf; border-right:1px solid #cfcfcf;"><strong>CAVALO VIAGEM:</strong><br>${escapeHtml(driverData.motoristaViagem?.truckPlate || driverData.truckPlate || '')}</div>
+              <div style="padding:8px 10px; border-top:1px solid #cfcfcf; border-right:1px solid #cfcfcf;"><strong>PLACA MANOBRA:</strong><br>${escapeHtml(driverData.maneuverPlate || driverData.dropHookManeuverPlate || driverData.motoristaManobra?.truckPlate || '')}</div>
               <div style="padding:8px 10px; border-top:1px solid #cfcfcf;"><strong>TIPO VEÍCULO:</strong><br>${escapeHtml(driverData.vehicleType || '')}</div>
             </div>
           </section>
 
           <section style="border:2px solid #111;">
-            <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:7px 10px; font-weight:900;">ASSINATURAS</div>
-            <table style="width:100%; border-collapse:collapse; font-size:11px;">
-              <thead style="background:#fafafa;">
-                <tr>
-                  <th style="border:1px solid #cfcfcf; padding:6px;">RESPONSÁVEL</th>
-                  <th style="border:1px solid #cfcfcf; padding:6px;">NOME</th>
-                  <th style="border:1px solid #cfcfcf; padding:6px;">ASSINATURA</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td style="border:1px solid #cfcfcf; padding:8px;">Motorista Manobra</td><td style="border:1px solid #cfcfcf; padding:8px;">${escapeHtml(manobra.nome || driverData.name || '')}</td><td style="border:1px solid #cfcfcf; padding:8px;"></td></tr>
-                <tr><td style="border:1px solid #cfcfcf; padding:8px;">Motorista Viagem</td><td style="border:1px solid #cfcfcf; padding:8px;">${escapeHtml(viagem.nome || '')}</td><td style="border:1px solid #cfcfcf; padding:8px;"></td></tr>
-                <tr><td style="border:1px solid #cfcfcf; padding:8px;">Portaria</td><td style="border:1px solid #cfcfcf; padding:8px;"></td><td style="border:1px solid #cfcfcf; padding:8px;"></td></tr>
-                <tr><td style="border:1px solid #cfcfcf; padding:8px;">Analista / Operação</td><td style="border:1px solid #cfcfcf; padding:8px;"></td><td style="border:1px solid #cfcfcf; padding:8px;"></td></tr>
-              </tbody>
-            </table>
+            <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:7px 10px; font-weight:900;">OBSERVAÇÃO</div>
+            <div style="padding:10px 12px; line-height:1.45; font-size:12px; min-height:48px;">
+              Campo livre para conferência da portaria/operação, sem necessidade de responsáveis e assinaturas nesta folha.
+            </div>
           </section>
         </div>
       `;
@@ -4904,12 +4953,43 @@
 
       const companyPrint = ((driverData.transportadora || '') + '').toString().trim();
       const vehicleTypePrint = ((driverData.vehicleType || '') + '').toString().trim();
+      const mainDriverPrint = driverData.isDropHook ? (driverData.motoristaViagem || {}) : {};
+      const manobraDriverPrint = driverData.isDropHook ? (driverData.motoristaManobra || {}) : {};
+      const mainDriverNamePrint = driverData.isDropHook ? (mainDriverPrint.nome || driverData.name || '') : (driverData.name || '');
+      const mainDriverCpfPrint = driverData.isDropHook ? (mainDriverPrint.cpf || driverData.cpf || '') : (driverData.cpf || '');
+      const mainDriverPhonePrint = driverData.isDropHook ? (mainDriverPrint.telefone || driverData.phone || '') : (driverData.phone || '');
+      const mainDriverCnhPrint = driverData.isDropHook ? (mainDriverPrint.cnh || driverData.cnh || '') : (driverData.cnh || '');
+      const mainTruckPlatePrint = driverData.isDropHook ? (mainDriverPrint.truckPlate || driverData.truckPlate || '') : (driverData.truckPlate || '');
+      const mainTrailerPlatePrint = driverData.isDropHook ? (mainDriverPrint.trailerPlate || driverData.trailerPlate || '') : (driverData.trailerPlate || '');
+      const mainVehicleTypePrint = driverData.isDropHook ? (mainDriverPrint.vehicleType || vehicleTypePrint || '') : vehicleTypePrint;
+      const manobraPlatePrint = sanitizePlate(driverData.maneuverPlate || driverData.dropHookManeuverPlate || manobraDriverPrint.truckPlate || '');
       const rawTransport = (driverData.printableDt || '').toString().trim();
       // Drop & Hook: manter o campo Nº Transporte em branco para preencher na caneta.
       const transportNumberPrint = driverData.isDropHook ? '' : rawTransport;
 
       const unloadDtRaw = (driverData.printableUnloadDt || '').toString().trim();
       const unloadDtPrint = unloadDtRaw ? unloadDtRaw : '';
+
+      const dropHookSimpleTermHtml = driverData.isDropHook ? `
+          <section style="border:2px solid #111; margin-bottom:6px; background:#fffdf5; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
+            <div style="
+              background:#fde68a !important;
+              color:#111 !important;
+              border-bottom:2px solid #111;
+              padding:6px 9px;
+              font-size:12px;
+              font-weight:900;
+              text-align:center;
+              letter-spacing:.08em;
+              text-transform:uppercase;
+              -webkit-print-color-adjust:exact;
+              print-color-adjust:exact;
+            ">TERMO SIMPLIFICADO DROP &amp; HOOK</div>
+            <div style="padding:7px 10px; font-size:10.6px; line-height:1.28; text-align:justify;">
+              Declaro ciência de que esta marcação pertence a uma operação <strong>Drop &amp; Hook</strong>. O <strong>Motorista Manobra</strong> está autorizado a realizar a entrada, posicionamento, manobra e acompanhamento operacional. O <strong>Motorista Viagem</strong> será o responsável pela retirada, condução e transporte do conjunto após liberação. As placas, DT e dados dos motoristas devem ser conferidos antes da continuidade do processo.
+            </div>
+          </section>
+      ` : '';
 
       // Somente para impressão da folha:
       // se o motorista clicou em Carregar e a folha foi criada manualmente por DT não encontrada,
@@ -4924,6 +5004,21 @@
       const rawAgendaTime = (firstResult[headerMap.agenda] || '').toString().trim();
       const agendaDatePrint = isManual ? printDate : (rawAgendaDate || printDate);
       const agendaTimePrint = isManual ? printTime : (rawAgendaTime || printTime);
+      const operationPanelTitle = driverData.isDropHook ? 'DADOS DO MOTORISTA MANOBRA' : 'DADOS DA OPERAÇÃO';
+      const operationPanelHtml = driverData.isDropHook ? `
+                <p><strong>MOTORISTA MANOBRA:</strong> ${escapeHtml(manobraDriverPrint.nome || '')}</p>
+                <p><strong>CPF:</strong> ${escapeHtml(manobraDriverPrint.cpf || '')}</p>
+                <p><strong>CELULAR:</strong> ${escapeHtml(manobraDriverPrint.telefone || '')}</p>
+                <p><strong>CNH:</strong> ${escapeHtml(manobraDriverPrint.cnh || '')}</p>
+                <p><strong>PLACA DO MANOBRA:</strong> ${escapeHtml(manobraPlatePrint || '')}</p>
+                <p><strong>OPERAÇÃO:</strong> ${escapeHtml(operationTag || '---')}</p>
+              ` : `
+                <p><strong>DATA AGENDA:</strong> ${escapeHtml(agendaDatePrint)}</p>
+                <p><strong>HORA AGENDA:</strong> ${escapeHtml(agendaTimePrint)}</p>
+                <p><strong>OPERAÇÃO:</strong> ${escapeHtml(operationTag || '---')}</p>
+                <p><strong>CLIENTE:</strong> ${escapeHtml(firstResult[headerMap.cliente] || 'N/A')}</p>
+                <p><strong>TRANSPORTADORA:</strong> ${escapeHtml(companyPrint || '---')}</p>
+              `;
       let priorityHtml = '';
       if (isGradeQueimada) {
         priorityHtml = `<div style="width:100%; border:1.8px solid #1a1a1a; text-align:center; padding:6px 9px; background:#FBBF24; border-radius:0;">
@@ -5048,9 +5143,8 @@
         ? buildChecklistPrintPage(buildDropHookChecklistDriver(driverData, 'MANOBRA'), sheetDataArray, operationTag, printDate, printTime)
         : buildChecklistPrintPage(driverData, sheetDataArray, operationTag, printDate, printTime);
 
-      const dropHookHtml = driverData.isDropHook
-        ? buildDropHookResponsibilityPage(driverData, printDate, printTime, operationTag)
-        : '';
+      // O termo Drop & Hook agora fica simplificado dentro da própria folha de marcação.
+      const dropHookHtml = '';
 
       document.getElementById('printable-area').innerHTML = `
         <style>
@@ -5133,19 +5227,19 @@
 
           <div style="display:grid; grid-template-columns: 1fr .74fr; gap:7px; margin-bottom:5px;">
             <section style="border:2px solid #111;">
-              <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:6px 9px; font-size:11.5px; font-weight:900; letter-spacing:.03em;">DADOS DO MOTORISTA E VEÍCULO</div>
+              <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:6px 9px; font-size:11.5px; font-weight:900; letter-spacing:.03em;">${driverData.isDropHook ? 'DADOS DO MOTORISTA VIAGEM E VEÍCULO' : 'DADOS DO MOTORISTA E VEÍCULO'}</div>
               <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0; padding:0;">
                 <div style="padding:7px 9px; line-height:1.34; border-right:1px solid #d4d4d4;">
                   <p><strong>DATA/HORA:</strong> ${printDate} ${printTime}</p>
-                  <p><strong>MOTORISTA:</strong> ${driverData.name}</p>
-                  <p><strong>CPF:</strong> ${driverData.cpf}</p>
-                  <p><strong>CELULAR:</strong> ${driverData.phone}</p>
-                  <p><strong>CNH:</strong> ${driverData.cnh || ''}</p>
+                  <p><strong>MOTORISTA:</strong> ${escapeHtml(mainDriverNamePrint)}</p>
+                  <p><strong>CPF:</strong> ${escapeHtml(mainDriverCpfPrint)}</p>
+                  <p><strong>CELULAR:</strong> ${escapeHtml(mainDriverPhonePrint)}</p>
+                  <p><strong>CNH:</strong> ${escapeHtml(mainDriverCnhPrint || '')}</p>
                 </div>
                 <div style="padding:7px 9px; line-height:1.34;">
-                  <p><strong>CAVALO:</strong> ${driverData.truckPlate}</p>
-                  <p><strong>CARRETA:</strong> ${driverData.trailerPlate}</p>
-                  <p><strong>TIPO DE VEÍCULO:</strong> ${vehicleTypePrint || '---'}</p>
+                  <p><strong>CAVALO:</strong> ${escapeHtml(mainTruckPlatePrint)}</p>
+                  <p><strong>CARRETA:</strong> ${escapeHtml(mainTrailerPlatePrint)}</p>
+                  <p><strong>TIPO DE VEÍCULO:</strong> ${escapeHtml(mainVehicleTypePrint || '---')}</p>
                   <p><strong>EIXOS:</strong> ${driverData.axles || ''}</p>
                   <p><strong>RENAVAM:</strong> ${driverData.renavam || ''}</p>
                 </div>
@@ -5153,13 +5247,9 @@
             </section>
 
             <section style="border:2px solid #111;">
-              <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:6px 9px; font-size:11.5px; font-weight:900; letter-spacing:.03em;">DADOS DA OPERAÇÃO</div>
+              <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:6px 9px; font-size:11.5px; font-weight:900; letter-spacing:.03em;">${operationPanelTitle}</div>
               <div style="padding:7px 9px; line-height:1.38;">
-                <p><strong>DATA AGENDA:</strong> ${agendaDatePrint}</p>
-                <p><strong>HORA AGENDA:</strong> ${agendaTimePrint}</p>
-                <p><strong>OPERAÇÃO:</strong> ${operationTag || '---'}</p>
-                <p><strong>CLIENTE:</strong> ${firstResult[headerMap.cliente] || 'N/A'}</p>
-                <p><strong>TRANSPORTADORA:</strong> ${companyPrint || '---'}</p>
+                ${operationPanelHtml}
               </div>
             </section>
           </div>
@@ -5208,6 +5298,7 @@
             </tbody>
           </table>
 
+          ${driverData.isDropHook ? '' : `
           <section style="border:2px solid #111; margin-bottom:6px;">
             <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:6px 9px; font-size:11.5px; font-weight:900; letter-spacing:.03em;">CHAMADO</div>
             <div style="padding:6px 11px; min-height:28px;">
@@ -5250,6 +5341,7 @@
               </tbody>
             </table>
           </section>
+          `}
 
           <section style="border:2px solid #111; margin-bottom:6px;">
             <div style="
@@ -5277,13 +5369,15 @@
             </ul>
           </section>
 
+          ${dropHookSimpleTermHtml}
+
           <section style="border:2px solid #111; padding:5px 9px;">
             <div style="font-size:12px; font-weight:900; margin-bottom:6px;">★ HEINEKEN UNIDADE JACAREÍ</div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; column-gap:22px; font-size:10.8px; line-height:1.34;">
               <div>
                 <p><strong>DATA:</strong> ${printDate}</p>
-                <p><strong>${driverData.isDropHook ? 'MOTORISTA MANOBRA' : 'MOTORISTA'}:</strong> ${driverData.isDropHook ? (driverData.motoristaManobra?.nome || driverData.name || '') : (driverData.name || '')}</p>
-                ${driverData.isDropHook ? `<p><strong>MOTORISTA VIAGEM:</strong> ${driverData.motoristaViagem?.nome || ''}</p>` : ''}
+                <p><strong>${driverData.isDropHook ? 'MOTORISTA VIAGEM' : 'MOTORISTA'}:</strong> ${driverData.isDropHook ? (driverData.motoristaViagem?.nome || driverData.name || '') : (driverData.name || '')}</p>
+                ${driverData.isDropHook ? `<p><strong>MOTORISTA MANOBRA:</strong> ${driverData.motoristaManobra?.nome || ''}</p>` : ''}
                 <p><strong>TELEFONE:</strong> ${driverData.phone}</p>
                 <p><strong>PLACA 1:</strong> ${driverData.truckPlate}</p>
                 <p><strong>NOTA FISCAL:</strong> ${driverData.invoice || ''}</p>
@@ -5363,6 +5457,7 @@ function showCallPanel(driverName, isAlert) {
       dropHookDtCarga = '';
       dropHookManeuverCpf = '';
       dropHookManeuverDriver = null;
+      dropHookManeuverPlate = '';
       dropHookAlsoUnload = false;
 
       renderCpfGate();
