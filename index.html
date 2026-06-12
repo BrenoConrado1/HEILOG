@@ -4464,15 +4464,24 @@
       return `
         <div class="print-page-break"></div>
         <div class="bg-white text-black font-sans print-main-container hm-sheet" style="padding:14px; font-size:13px; color:#111; border:2.5px solid #111; background:#fff;">
-          <header style="display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:2px solid #111; padding-bottom:10px; margin-bottom:12px;">
-            <div>
-              <div style="font-size:24px; font-weight:900; letter-spacing:.08em;">HEINEKEN • HEILOG</div>
-              <div style="font-size:10px; font-weight:800; letter-spacing:.08em;">UNIDADE JACAREÍ</div>
+          <header style="display:grid; grid-template-columns: 1.2fr 1fr .55fr; align-items:center; gap:12px; border-bottom:2px solid #111; padding-bottom:10px; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; min-height:62px;">
+              <div style="display:flex; align-items:center; gap:8px; min-height:58px; white-space:nowrap;">
+                <span style="font-size:10px; font-weight:900; letter-spacing:.02em;">EST.</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="#4b5563" style="flex:0 0 auto;">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z"/>
+                </svg>
+                <span style="font-size:10px; font-weight:900;">1873</span>
+                <div style="margin-left:5px;">
+                  <div style="font-size:28px; font-weight:900; letter-spacing:.06em; line-height:.9;">HEINEKEN</div>
+                  <div style="font-size:8.5px; font-weight:900; letter-spacing:.08em; margin-top:4px;">UNIDADE JACAREÍ</div>
+                </div>
+              </div>
             </div>
-            <div style="border:2px solid #111; padding:8px 12px; text-align:center; font-weight:900; font-size:18px;">
-              TERMO DROP & HOOK
+            <div style="border:2px solid #111; padding:10px 12px; text-align:center; font-weight:900; font-size:18px; letter-spacing:.06em;">
+              TERMO DROP &amp; HOOK
             </div>
-            <div style="text-align:right; font-size:11px; font-weight:800;">
+            <div style="text-align:right; font-size:11px; font-weight:800; line-height:1.45;">
               <div>DATA: ${escapeHtml(printDate)}</div>
               <div>HORA: ${escapeHtml(printTime)}</div>
             </div>
@@ -4876,7 +4885,8 @@
       const companyPrint = ((driverData.transportadora || '') + '').toString().trim();
       const vehicleTypePrint = ((driverData.vehicleType || '') + '').toString().trim();
       const rawTransport = (driverData.printableDt || '').toString().trim();
-      const transportNumberPrint = rawTransport;
+      // Drop & Hook: manter o campo Nº Transporte em branco para preencher na caneta.
+      const transportNumberPrint = driverData.isDropHook ? '' : rawTransport;
 
       const unloadDtRaw = (driverData.printableUnloadDt || '').toString().trim();
       const unloadDtPrint = unloadDtRaw ? unloadDtRaw : '';
@@ -4959,8 +4969,8 @@
 
         return `
           <tr>
-            <td style="border:1px solid #cfcfcf; padding:5px 7px; height:32px; font-weight:700;">${prod}</td>
-            <td style="border:1px solid #cfcfcf; padding:5px 7px; height:32px; text-align:center; font-weight:700;">${qtd}</td>
+            <td style="border:1px solid #cfcfcf; padding:5px 7px; height:38px; font-weight:700;">${prod}</td>
+            <td style="border:1px solid #cfcfcf; padding:5px 7px; height:38px; text-align:center; font-weight:700;">${qtd}</td>
           </tr>
         `;
       }).join('');
@@ -4975,26 +4985,65 @@
           .hm-sheet p { margin: 0 0 2px 0; }
           .hm-sheet strong { font-weight: 900; }
           @media print {
+            @page { size: A4 portrait; margin: 3mm; }
             .hm-sheet {
               zoom: 0.97;
               page-break-inside: avoid;
               break-inside: avoid;
             }
+
+            /* Ajuste solicitado: manter o modelo antigo, mas compactar SOMENTE a primeira folha de marcação
+               para não quebrar o bloco final da HEINEKEN em uma segunda página. */
+            .hm-main-sheet {
+              zoom: 0.98 !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid-page !important;
+              page-break-after: always !important;
+              break-after: page !important;
+              padding: 7px !important;
+              font-size: 12.2px !important;
+            }
+            .hm-main-sheet header {
+              gap: 8px !important;
+              padding-bottom: 5px !important;
+              margin-bottom: 6px !important;
+            }
+            .hm-main-sheet section,
+            .hm-main-sheet table {
+              margin-bottom: 5px !important;
+            }
+            .hm-main-sheet td,
+            .hm-main-sheet th {
+              padding: 4px 5px !important;
+            }
+            .hm-main-sheet p {
+              margin: 0 0 1px 0 !important;
+            }
+            .hm-main-sheet ul {
+              font-size: 10.4px !important;
+              line-height: 1.18 !important;
+              padding: 4px 10px 4px 18px !important;
+            }
+            .hm-main-sheet [style*="min-height:66px"] { min-height: 52px !important; }
+            .hm-main-sheet [style*="min-height:72px"] { min-height: 56px !important; }
+            .hm-main-sheet [style*="font-size:28px"] { font-size: 24px !important; }
+            .hm-main-sheet [style*="font-size:18px"] { font-size: 15.5px !important; }
+            .hm-main-sheet [style*="font-size:15px"] { font-size: 12.5px !important; }
           }
         </style>
-        <div class="bg-white text-black font-sans print-main-container hm-sheet" style="padding:12px; font-size:14px; color:#111; border:2.5px solid #111; background:#fff;">
-          <header style="display:grid; grid-template-columns: 1.1fr 1.2fr .65fr; gap:12px; align-items:center; border-bottom:2px solid #111; padding-bottom:9px; margin-bottom:9px;">
-            <div style="display:flex; align-items:center; gap:10px; min-height:66px; padding:5px 3px;">
-              <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
-                <span style="font-size:11px; font-weight:900;">EST.</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="#E50025">
+        <div class="bg-white text-black font-sans print-main-container hm-sheet hm-main-sheet" style="padding:12px; font-size:14px; color:#111; border:2.5px solid #111; background:#fff;">
+          <header style="display:grid; grid-template-columns: 1.12fr 1.08fr .78fr; gap:8px; align-items:center; border-bottom:2px solid #111; padding-bottom:7px; margin-bottom:6px;">
+            <div style="display:flex; align-items:center; min-height:66px; padding:5px 3px;">
+              <div style="display:flex; align-items:center; gap:8px; min-height:58px; white-space:nowrap;">
+                <span style="font-size:10px; font-weight:900; letter-spacing:.02em;">EST.</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="#4b5563" style="flex:0 0 auto;">
                   <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z"/>
                 </svg>
-                <span style="font-size:11px; font-weight:900;">1873</span>
-              </div>
-              <div>
-                <div class="font-title" style="font-size:28px; font-weight:900; letter-spacing:.07em; line-height:1;">HEINEKEN</div>
-                <div style="font-size:9px; font-weight:800; letter-spacing:.08em; margin-top:3px;">UNIDADE JACAREÍ • HEILOG</div>
+                <span style="font-size:10px; font-weight:900;">1873</span>
+                <div style="margin-left:5px;">
+                  <div style="font-size:28px; font-weight:900; letter-spacing:.06em; line-height:.9;">HEINEKEN</div>
+                  <div style="font-size:8.5px; font-weight:900; letter-spacing:.08em; margin-top:4px;">UNIDADE JACAREÍ</div>
+                </div>
               </div>
             </div>
 
@@ -5010,18 +5059,18 @@
             </div>
           </header>
 
-          <div style="display:grid; grid-template-columns: 1fr .66fr; gap:10px; margin-bottom:8px;">
+          <div style="display:grid; grid-template-columns: 1fr .74fr; gap:7px; margin-bottom:5px;">
             <section style="border:2px solid #111;">
               <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:6px 9px; font-size:11.5px; font-weight:900; letter-spacing:.03em;">DADOS DO MOTORISTA E VEÍCULO</div>
               <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0; padding:0;">
-                <div style="padding:8px 10px; line-height:1.48; border-right:1px solid #d4d4d4;">
+                <div style="padding:7px 9px; line-height:1.34; border-right:1px solid #d4d4d4;">
                   <p><strong>DATA/HORA:</strong> ${printDate} ${printTime}</p>
                   <p><strong>MOTORISTA:</strong> ${driverData.name}</p>
                   <p><strong>CPF:</strong> ${driverData.cpf}</p>
                   <p><strong>CELULAR:</strong> ${driverData.phone}</p>
                   <p><strong>CNH:</strong> ${driverData.cnh || ''}</p>
                 </div>
-                <div style="padding:8px 10px; line-height:1.48;">
+                <div style="padding:7px 9px; line-height:1.34;">
                   <p><strong>CAVALO:</strong> ${driverData.truckPlate}</p>
                   <p><strong>CARRETA:</strong> ${driverData.trailerPlate}</p>
                   <p><strong>TIPO DE VEÍCULO:</strong> ${vehicleTypePrint || '---'}</p>
@@ -5033,7 +5082,7 @@
 
             <section style="border:2px solid #111;">
               <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:6px 9px; font-size:11.5px; font-weight:900; letter-spacing:.03em;">DADOS DA OPERAÇÃO</div>
-              <div style="padding:8px 10px; line-height:1.52;">
+              <div style="padding:7px 9px; line-height:1.38;">
                 <p><strong>DATA AGENDA:</strong> ${agendaDatePrint}</p>
                 <p><strong>HORA AGENDA:</strong> ${agendaTimePrint}</p>
                 <p><strong>OPERAÇÃO:</strong> ${operationTag || '---'}</p>
@@ -5043,14 +5092,14 @@
             </section>
           </div>
 
-          <section style="border:2px solid #111; margin-bottom:8px;">
+          <section style="border:2px solid #111; margin-bottom:6px;">
             <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:6px 9px; font-size:11.5px; font-weight:900; letter-spacing:.03em;">PRODUTOS / VOLUMES</div>
             <div style="padding:8px 9px 7px;">
               <table style="width:100%; border-collapse:collapse; font-size:11px; text-align:left; border:1px solid #cfcfcf;">
                 <thead>
                   <tr style="background:#fafafa;">
-                    <th style="border:1px solid #cfcfcf; padding:6px 7px; text-align:center; font-size:11.5px;">${productHeader}</th>
-                    <th style="border:1px solid #cfcfcf; padding:6px 7px; text-align:center; font-size:11.5px;">Quantidade (PLT)</th>
+                    <th style="border:1px solid #cfcfcf; padding:7px 7px; text-align:center; font-size:11.5px;">${productHeader}</th>
+                    <th style="border:1px solid #cfcfcf; padding:7px 7px; text-align:center; font-size:11.5px;">Quantidade (PLT)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -5061,7 +5110,7 @@
             </div>
           </section>
 
-          <table style="width:100%; border-collapse:collapse; border:2px solid #111; margin-bottom:8px; font-size:11px;">
+          <table style="width:100%; border-collapse:collapse; border:2px solid #111; margin-bottom:6px; font-size:10.8px;">
             <thead>
               <tr style="background:#f3f4f6;">
                 <th style="border:1px solid #cfcfcf; padding:7px 6px;">TIPO</th>
@@ -5087,14 +5136,14 @@
             </tbody>
           </table>
 
-          <section style="border:2px solid #111; margin-bottom:8px;">
+          <section style="border:2px solid #111; margin-bottom:6px;">
             <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:6px 9px; font-size:11.5px; font-weight:900; letter-spacing:.03em;">CHAMADO</div>
             <div style="padding:6px 11px; min-height:28px;">
               <div style="border-bottom:1px solid #888; height:20px;"></div>
             </div>
           </section>
 
-          <section style="border:2px solid #111; margin-bottom:8px;">
+          <section style="border:2px solid #111; margin-bottom:6px;">
             <div style="background:#f3f4f6; border-bottom:1px solid #111; padding:6px 9px; font-size:11.5px; font-weight:900; letter-spacing:.03em;">RESPONSÁVEIS / ASSINATURAS</div>
             <table style="width:100%; border-collapse:collapse; font-size:11px;">
               <thead style="background:#fafafa;">
@@ -5107,30 +5156,30 @@
               </thead>
               <tbody>
                 <tr>
-                  <td style="border:1px solid #cfcfcf; padding:6px 7px;">Confirmação</td>
-                  <td style="border:1px solid #cfcfcf; padding:6px 7px; text-align:center;">Motorista Manobra</td>
+                  <td style="border:1px solid #cfcfcf; padding:7px 7px;">Confirmação</td>
+                  <td style="border:1px solid #cfcfcf; padding:7px 7px; text-align:center;">Motorista Manobra</td>
                   <td style="border:1px solid #cfcfcf; padding:6px 7px;">${driverData.name}</td>
-                  <td style="border:1px solid #cfcfcf; padding:6px 7px;"></td>
+                  <td style="border:1px solid #cfcfcf; padding:7px 7px;"></td>
                 </tr>
                 ${driverData.isDropHook ? `
                   <tr>
-                    <td style="border:1px solid #cfcfcf; padding:6px 7px;">Confirmação Drop & Hook</td>
-                    <td style="border:1px solid #cfcfcf; padding:6px 7px; text-align:center;">Motorista Viagem</td>
+                    <td style="border:1px solid #cfcfcf; padding:7px 7px;">Confirmação Drop & Hook</td>
+                    <td style="border:1px solid #cfcfcf; padding:7px 7px; text-align:center;">Motorista Viagem</td>
                     <td style="border:1px solid #cfcfcf; padding:6px 7px;">${driverData.motoristaViagem?.nome || ''}</td>
-                    <td style="border:1px solid #cfcfcf; padding:6px 7px;"></td>
+                    <td style="border:1px solid #cfcfcf; padding:7px 7px;"></td>
                   </tr>
                 ` : ''}
                 <tr>
-                  <td style="border:1px solid #cfcfcf; padding:6px 7px;">Analista</td>
-                  <td style="border:1px solid #cfcfcf; padding:6px 7px; text-align:center;">Analista</td>
-                  <td style="border:1px solid #cfcfcf; padding:6px 7px;"></td>
-                  <td style="border:1px solid #cfcfcf; padding:6px 7px;"></td>
+                  <td style="border:1px solid #cfcfcf; padding:7px 7px;">Analista</td>
+                  <td style="border:1px solid #cfcfcf; padding:7px 7px; text-align:center;">Analista</td>
+                  <td style="border:1px solid #cfcfcf; padding:7px 7px;"></td>
+                  <td style="border:1px solid #cfcfcf; padding:7px 7px;"></td>
                 </tr>
               </tbody>
             </table>
           </section>
 
-          <section style="border:2px solid #111; margin-bottom:8px;">
+          <section style="border:2px solid #111; margin-bottom:6px;">
             <div style="
   background:#e5e5e5 !important;
   color:#000 !important;
@@ -5156,9 +5205,9 @@
             </ul>
           </section>
 
-          <section style="border:2px solid #111; padding:6px 10px;">
-            <div style="font-size:13px; font-weight:900; margin-bottom:8px;">★ HEINEKEN UNIDADE JACAREÍ</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; column-gap:28px; font-size:10.5px; line-height:1.45;">
+          <section style="border:2px solid #111; padding:5px 9px;">
+            <div style="font-size:12px; font-weight:900; margin-bottom:6px;">★ HEINEKEN UNIDADE JACAREÍ</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; column-gap:22px; font-size:10.8px; line-height:1.34;">
               <div>
                 <p><strong>DATA:</strong> ${printDate}</p>
                 <p><strong>MOTORISTA MANOBRA:</strong> ${driverData.name}</p>
