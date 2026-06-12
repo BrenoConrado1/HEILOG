@@ -1353,6 +1353,11 @@
 
     // --- Constantes ---
     const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSHLJspPB5rUhpKWTUFGrtMeksd24eu1-I_l5S2qkhgFsie6cn1hITIUmr3k-ZuL4stm1x8MT0mC30s/pub?output=csv';
+    // ✅ Leitura alternativa da planilha sem CORS: usa o endpoint gviz via JSONP.
+    // Isso evita o erro "origin null / CORS" quando o HTML é aberto localmente.
+    const GOOGLE_SHEET_GVIZ_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSHLJspPB5rUhpKWTUFGrtMeksd24eu1-I_l5S2qkhgFsie6cn1hITIUmr3k-ZuL4stm1x8MT0mC30s/gviz/tq';
+    const SHEET_CACHE_KEY = 'heilog-last-sheet-csv-cache-v1';
+    const IS_LOCAL_FILE = window.location.protocol === 'file:';
     const CORS_PROXY_URL = 'https://api.allorigins.win/raw?url=';
     const EXTRA_PROXY_BUILDERS = [
       (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
@@ -1409,11 +1414,14 @@
     let baldeioDtCarga = '';
     let baldeioDtDescarga = '';
 
-    // Drop & Hook: motorista de manobra marca, motorista viagem leva o produto
+    // Drop & Hook: motorista viagem marca, informa o motorista manobra e escolhe se terá retorno/descarga
     let isDropHookFlow = false;
     let dropHookTripCpf = '';
     let dropHookTripDriver = null;
     let dropHookDtCarga = '';
+    let dropHookManeuverCpf = '';
+    let dropHookManeuverDriver = null;
+    let dropHookAlsoUnload = false;
 
     // --- Integração (Teste a cada 3 meses) ---
     const INTEGRATION_MIN_SCORE = 8;
@@ -1468,15 +1476,21 @@
           flowStep1: extra.flowStep1 || selectedFlowStep1 || '',
           flowStep2: extra.flowStep2 || selectedFlowStep2 || '',
           currentMode: (currentMode || '').toString().toUpperCase(),
-          loadAlsoUnload: !!loadAlsoUnload,
+          loadAlsoUnload: !!(extra.dropHookAlsoUnload ?? dropHookAlsoUnload ?? loadAlsoUnload),
           presetTransportadora: (presetTransportadora || '').toString().trim().toUpperCase(),
           isDrop: !!(extra.isDrop || extra.isDropHook || isDropHookFlow),
           isDropHook: !!(extra.isDropHook || extra.isDrop || isDropHookFlow),
           tipoMarcacao: (extra.isDrop || extra.isDropHook || isDropHookFlow) ? 'DROP' : 'NORMAL',
-          motoristaManobraCpf: extra.motoristaManobraCpf || cpfDigits || '',
-          motoristaManobra: extra.motoristaManobra || sessionDriver?.name || '',
-          motoristaViagemCpf: extra.motoristaViagemCpf || dropHookTripCpf || '',
-          motoristaViagem: extra.motoristaViagem || dropHookTripDriver?.name || '',
+          dropHookAlsoUnload: !!(extra.dropHookAlsoUnload ?? dropHookAlsoUnload),
+          controleIdaRetorno: (extra.isDrop || extra.isDropHook || isDropHookFlow)
+            ? ((extra.dropHookAlsoUnload ?? dropHookAlsoUnload) ? 'CARGA_E_DESCARGA' : 'CARGA')
+            : '',
+          contabilizarCarga: (extra.isDrop || extra.isDropHook || isDropHookFlow) ? 1 : 0,
+          contabilizarDescarga: (extra.isDrop || extra.isDropHook || isDropHookFlow) && (extra.dropHookAlsoUnload ?? dropHookAlsoUnload) ? 1 : 0,
+          motoristaManobraCpf: extra.motoristaManobraCpf || dropHookManeuverCpf || '',
+          motoristaManobra: extra.motoristaManobra || dropHookManeuverDriver?.name || '',
+          motoristaViagemCpf: extra.motoristaViagemCpf || cpfDigits || dropHookTripCpf || '',
+          motoristaViagem: extra.motoristaViagem || sessionDriver?.name || dropHookTripDriver?.name || '',
           origem: 'motorista_click',
           createdAt: new Date().toISOString(),
           createdAtMs: Date.now()
@@ -1593,9 +1607,11 @@
         cavalo: document.getElementById('truck-plate')?.value || '',
         carreta: document.getElementById('trailer-plate')?.value || '',
         isDropHook: !!isDropHookFlow,
-        motoristaManobra: document.getElementById('driver-name')?.value || sessionDriver?.name || '',
-        motoristaViagem: dropHookTripDriver?.name || '',
-        cpfMotoristaViagem: dropHookTripCpf || ''
+        motoristaManobra: isDropHookFlow ? (dropHookManeuverDriver?.name || '') : (document.getElementById('driver-name')?.value || sessionDriver?.name || ''),
+        cpfMotoristaManobra: isDropHookFlow ? (dropHookManeuverCpf || '') : (sessionCpf || normalizeDigits(document.getElementById('driver-cpf')?.value || '')),
+        motoristaViagem: isDropHookFlow ? (sessionDriver?.name || document.getElementById('driver-name')?.value || '') : (dropHookTripDriver?.name || ''),
+        cpfMotoristaViagem: isDropHookFlow ? (sessionCpf || normalizeDigits(document.getElementById('driver-cpf')?.value || '')) : (dropHookTripCpf || ''),
+        dropHookAlsoUnload: !!dropHookAlsoUnload
       };
     }
 
@@ -1615,6 +1631,87 @@
         return await fetch(url, { cache: 'no-store', credentials: 'omit', signal: controller.signal });
       } finally {
         clearTimeout(timer);
+      }
+    }
+
+    function csvEscapeValue(value) {
+      const text = String(value ?? '');
+      return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    }
+
+    function gvizResponseToCsv(response) {
+      if (!response || !response.table) throw new Error('Resposta inválida da planilha.');
+      const cols = (response.table.cols || []).map((col, idx) => (col.label || col.id || `COLUNA_${idx + 1}`).toString().trim());
+      const rows = (response.table.rows || []).map(row => {
+        const cells = row.c || [];
+        return cols.map((_, idx) => {
+          const cell = cells[idx];
+          if (!cell) return '';
+          return (cell.f ?? cell.v ?? '').toString();
+        });
+      });
+      return [cols, ...rows].map(line => line.map(csvEscapeValue).join(',')).join('\n');
+    }
+
+    function loadGoogleSheetViaJsonp(timeoutMs = FETCH_TIMEOUT_MS) {
+      return new Promise((resolve, reject) => {
+        const callbackName = `heilogSheetCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        const script = document.createElement('script');
+        let done = false;
+
+        const cleanup = () => {
+          try { delete window[callbackName]; } catch { window[callbackName] = undefined; }
+          try { script.remove(); } catch {}
+        };
+
+        const timer = setTimeout(() => {
+          if (done) return;
+          done = true;
+          cleanup();
+          reject(new Error('Tempo esgotado ao carregar a planilha via JSONP.'));
+        }, timeoutMs);
+
+        window[callbackName] = (response) => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          try {
+            if (response?.status && response.status !== 'ok') {
+              throw new Error(response?.errors?.[0]?.detailed_message || response?.errors?.[0]?.reason || 'Falha na resposta da planilha.');
+            }
+            resolve(gvizResponseToCsv(response));
+          } catch (e) {
+            reject(e);
+          } finally {
+            cleanup();
+          }
+        };
+
+        script.onerror = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          cleanup();
+          reject(new Error('Não foi possível carregar a planilha pelo modo sem CORS.'));
+        };
+
+        // responseHandler é próprio do Google Visualization e permite carregar como <script>, sem bloqueio CORS.
+        script.src = `${GOOGLE_SHEET_GVIZ_URL}?tqx=out:json;responseHandler:${callbackName}&t=${Date.now()}`;
+        document.head.appendChild(script);
+      });
+    }
+
+    function loadSheetFromCache() {
+      try {
+        const cached = localStorage.getItem(SHEET_CACHE_KEY);
+        if (!cached || cached.trim().length < 10) return false;
+        parseCSV(cached);
+        isSheetReady = database.length > 0;
+        updateModeAvailability();
+        return isSheetReady;
+      } catch (e) {
+        console.warn('Não foi possível usar cache local da planilha:', e);
+        return false;
       }
     }
 
@@ -1696,6 +1793,45 @@
     // --- Sheet ---
     async function loadDataFromSheet(isSilent = false) {
       if (!isSilent) fileStatus.textContent = 'Conectando à planilha...';
+
+      try {
+        // ✅ Primeiro tenta o modo sem CORS. Funciona melhor em arquivo local, GitHub Pages e localhost.
+        let csvText = await loadGoogleSheetViaJsonp();
+        if (!csvText || csvText.trim().length === 0) throw new Error('Planilha vazia.');
+
+        parseCSV(csvText);
+        try { localStorage.setItem(SHEET_CACHE_KEY, csvText); } catch {}
+
+        const lastUpdatedTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        fileStatus.textContent = `Planilha atualizada às ${lastUpdatedTime}.`;
+        fileStatus.className = 'text-green-400 text-xs h-4';
+
+        isSheetReady = database.length > 0;
+        updateModeAvailability();
+        return;
+      } catch (jsonError) {
+        console.warn('Modo sem CORS da planilha não carregou:', jsonError);
+
+        // Se estiver abrindo por file://, não força fetch direto/proxy para não gerar erro vermelho de CORS no console.
+        // Usa cache local, se existir, e mantém os fluxos manuais funcionando.
+        if (IS_LOCAL_FILE) {
+          const okCache = loadSheetFromCache();
+          const lastErrorTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          if (okCache) {
+            fileStatus.textContent = `Modo local: usando última planilha salva às ${lastErrorTime}.`;
+            fileStatus.className = 'text-yellow-200 text-xs h-4';
+            if (!isSilent) displayError('Não consegui atualizar a planilha online, mas usei a última base salva neste navegador.', 5000);
+          } else {
+            fileStatus.textContent = `Modo local: planilha não carregada às ${lastErrorTime}.`;
+            fileStatus.className = 'text-yellow-200 text-xs h-4';
+            isSheetReady = database.length > 0;
+            updateModeAvailability();
+            if (!isSilent) displayError('Abra pelo localhost/GitHub Pages para carregar a planilha automaticamente. Fluxos manuais continuam disponíveis.', 7000);
+          }
+          return;
+        }
+      }
+
       try {
         const baseUrl = `${GOOGLE_SHEET_CSV_URL}${GOOGLE_SHEET_CSV_URL.includes('?') ? '&' : '?'}t=${Date.now()}`;
         const candidates = [
@@ -1718,6 +1854,7 @@
 
         if (!csvText) throw lastErr || new Error('Falha ao buscar CSV.');
         parseCSV(csvText);
+        try { localStorage.setItem(SHEET_CACHE_KEY, csvText); } catch {}
 
         const lastUpdatedTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         fileStatus.textContent = `Planilha atualizada às ${lastUpdatedTime}.`;
@@ -1726,10 +1863,19 @@
         isSheetReady = database.length > 0;
         updateModeAvailability();
       } catch (error) {
+        const okCache = loadSheetFromCache();
         const lastErrorTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        if (okCache) {
+          fileStatus.textContent = `Usando última base salva às ${lastErrorTime}.`;
+          fileStatus.className = 'text-yellow-200 text-xs h-4';
+          if (!isSilent) displayError('Não foi possível atualizar agora, mas vou usar a última base carregada.', 5000);
+          return;
+        }
+
         fileStatus.textContent = `Erro ao atualizar às ${lastErrorTime}.`;
         fileStatus.className = 'text-red-400 text-xs h-4';
-        console.error("Erro ao buscar dados da planilha:", error);
+        console.warn('Erro ao buscar dados da planilha:', error);
 
         isSheetReady = database.length > 0;
         updateModeAvailability();
@@ -2038,8 +2184,12 @@
           lastFlowKey: driverData.flowKey || '',
           lastFlowLabel: driverData.flowLabel || '',
           lastIsDropHook: !!driverData.isDropHook,
-          lastDropHookMotoristaViagemCpf: driverData.dropHookTripCpf || driverData.motoristaViagem?.cpf || '',
-          lastDropHookMotoristaViagem: driverData.dropHookTripDriver?.name || driverData.motoristaViagem?.nome || '',
+          lastDropHookAlsoUnload: !!driverData.dropHookAlsoUnload,
+          lastDropHookControle: driverData.controleIdaRetorno || '',
+          lastDropHookMotoristaManobraCpf: driverData.motoristaManobra?.cpf || driverData.dropHookManeuverCpf || '',
+          lastDropHookMotoristaManobra: driverData.motoristaManobra?.nome || driverData.dropHookManeuverDriver?.name || '',
+          lastDropHookMotoristaViagemCpf: driverData.motoristaViagem?.cpf || driverData.dropHookTripCpf || '',
+          lastDropHookMotoristaViagem: driverData.motoristaViagem?.nome || driverData.dropHookTripDriver?.name || '',
           lastPriority: {
             isPriority: !!pInfoForDriver.isPriority,
             isOtif: !!pInfoForDriver.isOtif,
@@ -2091,6 +2241,10 @@
           isDrop: !!driverData.isDropHook,
           isDropHook: !!driverData.isDropHook,
           tipoMarcacao: driverData.isDropHook ? 'DROP' : 'NORMAL',
+          dropHookAlsoUnload: !!driverData.dropHookAlsoUnload,
+          controleIdaRetorno: driverData.controleIdaRetorno || (driverData.isDropHook ? (driverData.dropHookAlsoUnload ? 'CARGA_E_DESCARGA' : 'CARGA') : ''),
+          contabilizarCarga: driverData.isDropHook ? 1 : 0,
+          contabilizarDescarga: driverData.isDropHook && driverData.dropHookAlsoUnload ? 1 : 0,
           motoristaManobra: driverData.motoristaManobra || {
             nome: driverData.name || '',
             cpf: unmaskedCpf,
@@ -2102,11 +2256,15 @@
           dropHook: driverData.isDropHook ? {
             tipo: 'DROP',
             isDrop: true,
-            motoristaManobraCpf: unmaskedCpf,
-            motoristaManobra: driverData.name || '',
-            motoristaViagemCpf: driverData.dropHookTripCpf || driverData.motoristaViagem?.cpf || '',
-            motoristaViagem: driverData.dropHookTripDriver?.name || driverData.motoristaViagem?.nome || '',
-            termoResponsabilidade: 'Carregamento realizado por motorista de manobra e viagem/retirada do produto por motorista viagem.',
+            dropHookAlsoUnload: !!driverData.dropHookAlsoUnload,
+            controleIdaRetorno: driverData.controleIdaRetorno || (driverData.dropHookAlsoUnload ? 'CARGA_E_DESCARGA' : 'CARGA'),
+            contabilizarCarga: 1,
+            contabilizarDescarga: driverData.dropHookAlsoUnload ? 1 : 0,
+            motoristaManobraCpf: driverData.motoristaManobra?.cpf || driverData.dropHookManeuverCpf || '',
+            motoristaManobra: driverData.motoristaManobra?.nome || driverData.dropHookManeuverDriver?.name || '',
+            motoristaViagemCpf: driverData.motoristaViagem?.cpf || unmaskedCpf || '',
+            motoristaViagem: driverData.motoristaViagem?.nome || driverData.name || '',
+            termoResponsabilidade: 'Carregamento/manobra realizado por um motorista e viagem/retirada do produto por outro motorista.',
             updatedAt: new Date().toISOString()
           } : null,
           cpf: unmaskedCpf,
@@ -2149,6 +2307,12 @@
             status: 'Em Pátio',
             operacao: driverData.operacao || 'Drop & Hook',
             flowKey: driverData.flowKey || 'DROP_HOOK',
+            flowLabel: driverData.flowLabel || '',
+            flowStep2: driverData.flowStep2 || '',
+            dropHookAlsoUnload: !!driverData.dropHookAlsoUnload,
+            controleIdaRetorno: driverData.controleIdaRetorno || (driverData.dropHookAlsoUnload ? 'CARGA_E_DESCARGA' : 'CARGA'),
+            contabilizarCarga: 1,
+            contabilizarDescarga: driverData.dropHookAlsoUnload ? 1 : 0,
             motoristaManobra: patioDataToSave.motoristaManobra,
             motoristaViagem: patioDataToSave.motoristaViagem,
             placas: {
@@ -2459,6 +2623,9 @@
       dropHookTripCpf = '';
       dropHookTripDriver = null;
       dropHookDtCarga = '';
+      dropHookManeuverCpf = '';
+      dropHookManeuverDriver = null;
+      dropHookAlsoUnload = false;
 
       actionArea.innerHTML = `
         ${renderProgressBar(2, ['Identificação', 'Fluxo', 'Dados', 'Conferência'])}
@@ -2513,12 +2680,12 @@
                 <span class="mode-arrow">›</span>
               </button>
 
-              <button data-mode="DROP_HOOK" class="mode-btn" title="Drop & Hook: motorista manobra carrega e motorista viagem leva o produto">
+              <button data-mode="DROP_HOOK" class="mode-btn" title="Drop & Hook: informe o CPF do motorista manobra e se também haverá descarga">
                 <div class="mode-main">
                   <div class="mode-icon">DH</div>
                   <div class="mode-copy">
                     <div class="mode-title">Drop & Hook</div>
-                    <div class="mode-meta">Registra DROP e motorista viagem</div>
+                    <div class="mode-meta">Registra DROP, carga e retorno</div>
                   </div>
                 </div>
                 <span class="mode-arrow">›</span>
@@ -2564,7 +2731,7 @@
           } else if (currentMode === 'HIDROMAN') {
             setFlowSelection('HIDROMAN', 'Hidroman', 'HIDROMAN', 'HIDROMAN');
           } else if (currentMode === 'DROP_HOOK') {
-            setFlowSelection('DROP_HOOK', 'Drop & Hook', 'DROP_HOOK', 'MOTORISTA_VIAGEM');
+            setFlowSelection('DROP_HOOK', 'Drop & Hook', 'DROP_HOOK', 'MOTORISTA_MANOBRA');
           }
 
           renderModeForm(currentMode);
@@ -2616,6 +2783,9 @@
       dropHookTripCpf = '';
       dropHookTripDriver = null;
       dropHookDtCarga = '';
+      dropHookManeuverCpf = '';
+      dropHookManeuverDriver = null;
+      dropHookAlsoUnload = false;
 
       const backBtn = `
         <button id="back-to-modes" class="btn-ghost w-full py-3 rounded-xl text-base font-bold">
@@ -2688,7 +2858,7 @@
       if (mode === 'DROP_HOOK') {
         isDropHookFlow = true;
         manualPresetType = 'Drop & Hook';
-        setFlowSelection('DROP_HOOK', 'Drop & Hook', 'DROP_HOOK', 'MOTORISTA_VIAGEM');
+        setFlowSelection('DROP_HOOK', 'Drop & Hook', 'DROP_HOOK', 'MOTORISTA_MANOBRA');
 
         html = `
           ${renderProgressBar(2, ['Identificação', 'Fluxo', 'Dados', 'Conferência'])}
@@ -2696,18 +2866,15 @@
             <div class="step">PASSO 1</div>
             <div class="big-title text-white">Drop & Hook</div>
             <div class="help">
-              Informe a DT da carga, se tiver, e o CPF do <b>motorista viagem</b>.
-              O motorista identificado no início será considerado <b>motorista manobra</b>.
+              Informe apenas o CPF do <b>motorista manobra</b>. Depois o sistema perguntará se também vai descarregar.
+              O motorista identificado no início será considerado <b>motorista viagem</b>.
             </div>
 
-            <input type="text" id="drop-hook-dt" inputmode="numeric" pattern="[0-9]*"
-              class="form-input input-xl rounded-lg" placeholder="DT da carga (opcional)">
+            <input type="text" id="drop-hook-maneuver-cpf" inputmode="numeric"
+              class="form-input input-xl rounded-lg" placeholder="CPF do motorista manobra">
 
-            <input type="text" id="drop-hook-trip-cpf" inputmode="numeric"
-              class="form-input input-xl rounded-lg" placeholder="CPF do motorista viagem">
-
-            <div id="drop-hook-trip-preview" class="form-hint-box text-sm text-gray-200">
-              Ao continuar, vou buscar o cadastro do motorista viagem no Firebase.
+            <div id="drop-hook-maneuver-preview" class="form-hint-box text-sm text-gray-200">
+              Ao continuar, vou buscar o cadastro do motorista manobra no Firebase.
             </div>
 
             <button id="drop-hook-continue" class="btn-green w-full py-4 rounded-xl text-lg font-extrabold">
@@ -2919,29 +3086,28 @@
       }
 
       if (mode === 'DROP_HOOK') {
-        const dropCpfEl = document.getElementById('drop-hook-trip-cpf');
-        const dropDtEl = document.getElementById('drop-hook-dt');
-        const dropPreview = document.getElementById('drop-hook-trip-preview');
+        const dropCpfEl = document.getElementById('drop-hook-maneuver-cpf');
+        const dropPreview = document.getElementById('drop-hook-maneuver-preview');
         if (dropCpfEl) IMask(dropCpfEl, { mask: '000.000.000-00' });
 
         const refreshDropPreview = async () => {
           const cpf = normalizeDigits(dropCpfEl?.value || '');
           if (!dropPreview) return;
           if (cpf.length !== 11) {
-            dropPreview.innerHTML = 'Digite o CPF completo do <b>motorista viagem</b> para consultar o cadastro.';
+            dropPreview.innerHTML = 'Digite o CPF completo do <b>motorista manobra</b> para consultar o cadastro.';
             return;
           }
-          dropPreview.innerHTML = 'Buscando motorista viagem...';
+          dropPreview.innerHTML = 'Buscando motorista manobra...';
           const data = await loadDriverByCpf(cpf);
           if (data) {
             dropPreview.innerHTML = `
-              <div class="font-extrabold text-white">Motorista viagem encontrado</div>
+              <div class="font-extrabold text-white">Motorista manobra encontrado</div>
               <div>Nome: <b>${escapeHtml(data.name || '')}</b></div>
               <div>Transportadora: <b>${escapeHtml(data.transportadora || 'Não informada')}</b></div>
               <div>Telefone: <b>${escapeHtml(data.phone || 'Não informado')}</b></div>
             `;
           } else {
-            dropPreview.innerHTML = 'Motorista viagem não encontrado no cadastro. Cadastre esse motorista antes de seguir com Drop & Hook.';
+            dropPreview.innerHTML = 'Motorista manobra não encontrado no cadastro. Cadastre esse motorista antes de seguir com Drop & Hook.';
           }
         };
 
@@ -2954,56 +3120,61 @@
 
         document.getElementById('drop-hook-continue')?.addEventListener('click', async () => {
           await unlockAudio();
-          const viagemCpf = normalizeDigits(dropCpfEl?.value || '');
-          if (viagemCpf.length !== 11) return displayError('Digite um CPF válido para o motorista viagem.', 5000, { field: dropCpfEl });
+          const manobraCpf = normalizeDigits(dropCpfEl?.value || '');
+          if (manobraCpf.length !== 11) return displayError('Digite um CPF válido para o motorista manobra.', 5000, { field: dropCpfEl });
 
-          const viagemDriver = await loadDriverByCpf(viagemCpf);
-          if (!viagemDriver) {
-            return displayError('Motorista viagem não encontrado. Cadastre o motorista viagem antes de marcar Drop & Hook.', 7000, { field: dropCpfEl });
+          const manobraDriver = await loadDriverByCpf(manobraCpf);
+          if (!manobraDriver) {
+            return displayError('Motorista manobra não encontrado. Cadastre o motorista manobra antes de marcar Drop & Hook.', 7000, { field: dropCpfEl });
           }
 
+          const willUnload = await openDropHookUnloadQuestionModal();
+
           isDropHookFlow = true;
-          dropHookTripCpf = viagemCpf;
-          dropHookTripDriver = viagemDriver;
-          dropHookDtCarga = normalizeDtId(dropDtEl?.value || '');
+          dropHookManeuverCpf = manobraCpf;
+          dropHookManeuverDriver = manobraDriver;
+          dropHookAlsoUnload = !!willUnload;
+          loadAlsoUnload = !!willUnload;
+          dropHookTripCpf = normalizeDigits(sessionCpf);
+          dropHookTripDriver = sessionDriver;
+          dropHookDtCarga = '';
           manualPresetType = 'Drop & Hook';
+          manualDtIdOverride = generateInternalId(willUnload ? 'DROP_CD' : 'DROP_CARGA');
           hideManualExtras = true;
           showUnloadInputs = false;
           requireUnloadDtInForm = false;
           pendingUnloadDt = '';
-          presetTransportadora = (sessionDriver?.transportadora || viagemDriver.transportadora || '').toString().trim().toUpperCase();
+          presetTransportadora = (sessionDriver?.transportadora || manobraDriver.transportadora || '').toString().trim().toUpperCase();
           lockTransportadora = false;
-          setFlowSelection('DROP_HOOK', 'Drop & Hook', 'DROP_HOOK', 'MOTORISTA_VIAGEM');
+          setFlowSelection(
+            'DROP_HOOK',
+            willUnload ? 'Drop & Hook - Carga e Descarga' : 'Drop & Hook - Carga',
+            'DROP_HOOK',
+            willUnload ? 'CARGA_E_DESCARGA' : 'SOMENTE_CARGA'
+          );
 
           await registerFlowClick({
             flowKey: 'DROP_HOOK',
-            flowLabel: 'Drop & Hook',
+            flowLabel: willUnload ? 'Drop & Hook - Carga e Descarga' : 'Drop & Hook - Carga',
             flowStep1: 'DROP_HOOK',
-            flowStep2: 'MOTORISTA_VIAGEM',
+            flowStep2: willUnload ? 'CARGA_E_DESCARGA' : 'SOMENTE_CARGA',
             isDrop: true,
             isDropHook: true,
-            motoristaManobraCpf: normalizeDigits(sessionCpf),
-            motoristaManobra: sessionDriver?.name || '',
-            motoristaViagemCpf: viagemCpf,
-            motoristaViagem: viagemDriver.name || ''
+            dropHookAlsoUnload: willUnload,
+            motoristaManobraCpf: manobraCpf,
+            motoristaManobra: manobraDriver.name || '',
+            motoristaViagemCpf: normalizeDigits(sessionCpf),
+            motoristaViagem: sessionDriver?.name || ''
           });
 
-          const matches = dropHookDtCarga && database.length
-            ? database.filter(row => (row[headerMap.dts] || '').toString().trim().toLowerCase() === dropHookDtCarga.toLowerCase())
-            : [];
-
-          if (matches.length > 0) {
-            showDriverForm(matches, { modeLabel: 'Drop & Hook', isManualOverride: false });
-          } else {
-            manualDtIdOverride = dropHookDtCarga || generateInternalId('DROP');
-            showDriverForm([{ 
-              [headerMap.dts]: manualDtIdOverride,
-              [headerMap.cliente]: 'DROP & HOOK',
-              [headerMap.produto]: 'Drop & Hook',
-              [headerMap.transportadora]: sessionDriver?.transportadora || viagemDriver.transportadora || '',
-              [headerMap.deposito]: 'FÁBRICA'
-            }], { modeLabel: 'Drop & Hook', isManualOverride: true });
-          }
+          showDriverForm([{
+            [headerMap.dts]: manualDtIdOverride,
+            [headerMap.cliente]: 'DROP & HOOK',
+            [headerMap.produto]: '',
+            [headerMap.plt]: '',
+            [headerMap.transportadora]: sessionDriver?.transportadora || manobraDriver.transportadora || '',
+            [headerMap.deposito]: 'FÁBRICA'
+          }], { modeLabel: willUnload ? 'Drop & Hook - Carga e Descarga' : 'Drop & Hook - Carga', isManualOverride: true });
         });
 
         dropCpfEl?.focus();
@@ -3500,10 +3671,11 @@
               <div class="step">DROP & HOOK</div>
               <div class="big-title text-white">Motoristas da operação</div>
               <div class="summary-grid">
-                ${buildSummaryItem('Motorista manobra', sessionDriver?.name || 'Será preenchido abaixo')}
-                ${buildSummaryItem('CPF manobra', sessionCpf ? sessionCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado')}
-                ${buildSummaryItem('Motorista viagem', dropHookTripDriver?.name || 'Não informado')}
-                ${buildSummaryItem('CPF viagem', dropHookTripCpf ? dropHookTripCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado')}
+                ${buildSummaryItem('Motorista manobra', dropHookManeuverDriver?.name || 'Não informado')}
+                ${buildSummaryItem('CPF manobra', dropHookManeuverCpf ? dropHookManeuverCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado')}
+                ${buildSummaryItem('Motorista viagem', sessionDriver?.name || 'Será preenchido abaixo')}
+                ${buildSummaryItem('CPF viagem', sessionCpf ? sessionCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado')}
+                ${buildSummaryItem('Vai descarregar também?', dropHookAlsoUnload ? 'SIM - contar carga e descarga' : 'NÃO - contar apenas carga')}
               </div>
               <div class="help">A folha impressa terá o termo de responsabilidade para portaria e checklist com os dois motoristas.</div>
             </div>
@@ -3925,12 +4097,13 @@
 
         confirmSummary.innerHTML = [
           buildSummaryItem('Motorista manobra', summary.isDropHook ? (summary.motoristaManobra || summary.motorista) : summary.motorista),
-          buildSummaryItem('CPF manobra', summary.cpf),
+          buildSummaryItem('CPF manobra', summary.isDropHook ? (summary.cpfMotoristaManobra || summary.cpf) : summary.cpf),
           ...(summary.isDropHook ? [
             buildSummaryItem('Motorista viagem', summary.motoristaViagem),
             buildSummaryItem('CPF viagem', summary.cpfMotoristaViagem)
           ] : []),
           buildSummaryItem('Operação', summary.operacao),
+          ...(summary.isDropHook ? [buildSummaryItem('Controle', summary.dropHookAlsoUnload ? 'Carga e descarga' : 'Apenas carga')] : []),
           buildSummaryItem('DT', summary.dt),
           buildSummaryItem('DT Descarga', summary.dtDescarga),
           buildSummaryItem('Transportadora', summary.transportadora),
@@ -4001,6 +4174,35 @@
         };
 
         document.addEventListener('keydown', escHandler);
+      });
+    }
+
+
+    function openDropHookUnloadQuestionModal() {
+      return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.id = 'drop-hook-unload-question-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:1200;padding:16px;';
+        overlay.innerHTML = `
+          <div class="card shadow-2xl p-6 space-y-4" style="width:100%;max-width:520px;border-radius:22px;">
+            <div class="text-center">
+              <h3 class="font-title text-3xl text-white uppercase">Drop & Hook</h3>
+              <p class="help mt-2">Esse motorista também vai descarregar no retorno?</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <button id="drop-hook-unload-no" class="btn-ghost w-full py-5 rounded-xl text-xl font-extrabold">NÃO<br><span style="font-size:.78rem;font-weight:700;opacity:.8;">Contar apenas carga</span></button>
+              <button id="drop-hook-unload-yes" class="btn-green w-full py-5 rounded-xl text-xl font-extrabold">SIM<br><span style="font-size:.78rem;font-weight:700;opacity:.9;">Contar carga e descarga</span></button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+
+        const cleanup = () => overlay.remove();
+        overlay.querySelector('#drop-hook-unload-no')?.addEventListener('click', () => { cleanup(); resolve(false); });
+        overlay.querySelector('#drop-hook-unload-yes')?.addEventListener('click', () => { cleanup(); resolve(true); });
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) { cleanup(); resolve(false); }
+        });
       });
     }
 
@@ -4110,7 +4312,14 @@
         dropHookTripDriver: dropHookTripDriver || null
       };
 
-      driverData.motoristaManobra = {
+      driverData.motoristaManobra = driverData.isDropHook ? {
+        nome: dropHookManeuverDriver?.name || '',
+        cpf: dropHookManeuverCpf || '',
+        telefone: normalizeDigits(dropHookManeuverDriver?.phone || ''),
+        cnh: dropHookManeuverDriver?.cnh || '',
+        cnhExpiry: dropHookManeuverDriver?.cnhExpiry || '',
+        transportadora: dropHookManeuverDriver?.transportadora || ''
+      } : {
         nome: driverData.name || '',
         cpf: normalizeDigits(driverData.cpf),
         telefone: normalizeDigits(driverData.phone),
@@ -4119,24 +4328,32 @@
       };
 
       driverData.motoristaViagem = driverData.isDropHook ? {
-        nome: dropHookTripDriver?.name || '',
-        cpf: dropHookTripCpf || '',
-        telefone: normalizeDigits(dropHookTripDriver?.phone || ''),
-        cnh: dropHookTripDriver?.cnh || '',
-        cnhExpiry: dropHookTripDriver?.cnhExpiry || '',
-        transportadora: dropHookTripDriver?.transportadora || '',
-        truckPlate: sanitizePlate(dropHookTripDriver?.truckPlate || ''),
-        trailerPlate: sanitizePlate(dropHookTripDriver?.trailerPlate || ''),
-        vehicleType: dropHookTripDriver?.vehicleType || ''
+        nome: driverData.name || sessionDriver?.name || '',
+        cpf: normalizeDigits(driverData.cpf || sessionCpf),
+        telefone: normalizeDigits(driverData.phone || sessionDriver?.phone || ''),
+        cnh: driverData.cnh || sessionDriver?.cnh || '',
+        cnhExpiry: driverData.cnhExpiry || sessionDriver?.cnhExpiry || '',
+        transportadora: driverData.transportadora || sessionDriver?.transportadora || '',
+        truckPlate: sanitizePlate(driverData.truckPlate || ''),
+        trailerPlate: sanitizePlate(driverData.trailerPlate || ''),
+        vehicleType: driverData.vehicleType || ''
       } : null;
+
+      driverData.dropHookManeuverCpf = dropHookManeuverCpf || '';
+      driverData.dropHookManeuverDriver = dropHookManeuverDriver || null;
+      driverData.dropHookAlsoUnload = !!dropHookAlsoUnload;
+      driverData.contabilizarCarga = driverData.isDropHook ? 1 : 0;
+      driverData.contabilizarDescarga = driverData.isDropHook && dropHookAlsoUnload ? 1 : 0;
+      driverData.controleIdaRetorno = driverData.isDropHook ? (dropHookAlsoUnload ? 'CARGA_E_DESCARGA' : 'CARGA') : '';
 
       driverData.operacao = computeTransportOperationLabel();
       driverData.flowKey = selectedFlowKey || '';
       driverData.flowLabel = selectedFlowLabel || driverData.operacao || '';
       if (driverData.isDropHook) {
-        driverData.operacao = 'Drop & Hook';
+        driverData.operacao = dropHookAlsoUnload ? 'Drop & Hook - Carga e Descarga' : 'Drop & Hook - Carga';
         driverData.flowKey = 'DROP_HOOK';
-        driverData.flowLabel = 'Drop & Hook';
+        driverData.flowLabel = driverData.operacao;
+        driverData.flowStep2 = dropHookAlsoUnload ? 'CARGA_E_DESCARGA' : 'SOMENTE_CARGA';
       }
       driverData.flowStep1 = selectedFlowStep1 || '';
       driverData.flowStep2 = selectedFlowStep2 || '';
@@ -4151,8 +4368,8 @@
         ...firstOriginal,
         [headerMap.dts]: dtToUse,
         [headerMap.cliente]: (document.getElementById('manual-client')?.value || ''),
-        [headerMap.produto]: (document.getElementById('manual-type')?.value || manualPresetType || ''),
-        [headerMap.plt]: (document.getElementById('manual-plt')?.value || ''),
+        [headerMap.produto]: driverData.isDropHook ? '' : (document.getElementById('manual-type')?.value || manualPresetType || ''),
+        [headerMap.plt]: driverData.isDropHook ? '' : (document.getElementById('manual-plt')?.value || ''),
         [headerMap.transportadora]: (document.getElementById('driver-transportadora')?.value || ''),
         [headerMap.canal]: (document.getElementById('manual-canal')?.value || ''),
         [headerMap.deposito]: 'FÁBRICA'
@@ -4342,7 +4559,7 @@
       const cpfViagem = driverData.motoristaViagem?.cpf || driverData.dropHookTripCpf || '';
 
       const isCargaDescarga = operacao.includes('CARGA E DESCARGA') || operacao.includes('CARGA + DESCARGA');
-      const isCarga = isCargaDescarga || operacao.includes('CARREG');
+      const isCarga = isCargaDescarga || operacao.includes('CARREG') || operacao.includes('CARGA');
       const isDescarga = isCargaDescarga || operacao.includes('DESCARG');
 
       const vehicleTypes = ['BAÚ','CARGA SECA','SIDER OCO','ASA DELTA','CONTAINER'];
@@ -4640,7 +4857,7 @@
       const productRaw = (firstResult[headerMap.produto] || '').toString().toUpperCase();
       let operationTag = '';
       const transpUpper = ((driverData.transportadora || '') + '').toString().trim().toUpperCase();
-      if (driverData.isDropHook) operationTag = 'DROP & HOOK';
+      if (driverData.isDropHook) operationTag = driverData.dropHookAlsoUnload ? 'DROP & HOOK - CARGA E DESCARGA' : 'DROP & HOOK - CARGA';
       else if (transpUpper === 'HIDROMAN') operationTag = 'HIDROMAN';
       else if (productRaw.includes('HIDROMAN')) operationTag = 'HIDROMAN';
       else if (productRaw.includes('BALDEIO') || productRaw.includes('RITMO')) operationTag = 'BALDEIO';
@@ -4728,13 +4945,17 @@
 
       const safeRows = sheetDataArray.length ? sheetDataArray : [{}];
       const rowsHtml = safeRows.map(item => {
-        const prod = isManual
-          ? (isBaldeio ? '' : ((item[headerMap.produto] || '') || (operationTag || '')))
-          : (item[headerMap.produto] || '');
+        const prod = driverData.isDropHook
+          ? ''
+          : (isManual
+            ? (isBaldeio ? '' : ((item[headerMap.produto] || '') || (operationTag || '')))
+            : (item[headerMap.produto] || ''));
 
-        const qtd = isManual
-          ? (item[headerMap.plt] || '')
-          : (item[headerMap.plt] || '');
+        const qtd = driverData.isDropHook
+          ? ''
+          : (isManual
+            ? (item[headerMap.plt] || '')
+            : (item[headerMap.plt] || ''));
 
         return `
           <tr>
@@ -4853,8 +5074,8 @@
               <tr>
                 <td style="border:1px solid #cfcfcf; padding:6px 9px; line-height:1.6; width:25%;">
                   <div>${driverData.isDropHook ? '[X]' : '[ ]'} Drop & Hook</div>
-                  <div>[ ] Carregamento</div>
-                  <div>[ ] Descarregamento</div>
+                  <div>${driverData.isDropHook ? '[X]' : '[ ]'} Carregamento</div>
+                  <div>${driverData.isDropHook && driverData.dropHookAlsoUnload ? '[X]' : '[ ]'} Descarregamento</div>
                 </td>
                 <td style="border:1px solid #cfcfcf; padding:7px 9px; text-align:center; font-size:13px; font-weight:900;">${driverData.invoice || '---'}</td>
                 <td style="border:1px solid #cfcfcf; padding:7px 9px; text-align:center; font-size:13px; font-weight:900;">${transportNumberPrint || ''}</td>
@@ -5019,6 +5240,9 @@ function showCallPanel(driverName, isAlert) {
       dropHookTripCpf = '';
       dropHookTripDriver = null;
       dropHookDtCarga = '';
+      dropHookManeuverCpf = '';
+      dropHookManeuverDriver = null;
+      dropHookAlsoUnload = false;
 
       renderCpfGate();
       clearTimeout(panelTimeout);
