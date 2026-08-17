@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HEILOG - Assistente de Logística (Simplificado)</title>
+  <title>HEILOG - Assistente de Fluxos Rápidos</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -1593,6 +1593,134 @@
       background: linear-gradient(to top, rgba(244,251,246,1), rgba(244,251,246,0.78));
     }
 
+    /* Aba visual para Operações principais */
+    .simple-ui .flow-group.operacoes-principais-group {
+      background: linear-gradient(135deg, rgba(0, 144, 74, 0.12), rgba(255, 255, 255, 0.94) 52%, rgba(229, 0, 37, 0.05));
+      border: 2px solid rgba(0, 144, 74, 0.24);
+      box-shadow: 0 16px 34px rgba(0, 144, 74, 0.10), inset 0 1px 0 rgba(255,255,255,0.82);
+    }
+
+    .simple-ui .operacoes-principais-group .flow-group-title {
+      width: fit-content;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(0, 144, 74, 0.12);
+      border: 1px solid rgba(0, 144, 74, 0.26);
+      color: #166534 !important;
+      font-weight: 900;
+    }
+
+    .simple-ui .operacoes-principais-group .flow-group-title::after {
+      display: none;
+    }
+
+    .simple-ui .main-process-alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(0, 144, 74, 0.10), rgba(255, 255, 255, 0.96));
+      border: 1px solid rgba(0, 144, 74, 0.22);
+      color: #14532d;
+      box-shadow: 0 10px 24px rgba(0, 144, 74, 0.08);
+    }
+
+    .simple-ui .main-process-alert-icon {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      background: rgba(0, 144, 74, 0.12);
+      border: 1px solid rgba(0, 144, 74, 0.22);
+    }
+
+    .simple-ui .main-process-alert-title {
+      font-size: 0.9rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 2px;
+      color: #166534;
+    }
+
+    .simple-ui .main-process-alert-text {
+      font-size: 0.92rem;
+      line-height: 1.35;
+      color: #14532d;
+      font-weight: 700;
+    }
+
+    .simple-ui .ritmo-exclusive-alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0.96));
+      border: 1px solid rgba(37, 99, 235, 0.24);
+      color: #1e3a8a;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.10);
+    }
+
+    .simple-ui .ritmo-exclusive-alert-icon {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      background: rgba(37, 99, 235, 0.14);
+      border: 1px solid rgba(37, 99, 235, 0.22);
+    }
+
+    .simple-ui .ritmo-exclusive-alert-title {
+      font-size: 0.9rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 2px;
+      color: #1d4ed8;
+    }
+
+    .simple-ui .ritmo-exclusive-alert-text {
+      font-size: 0.92rem;
+      line-height: 1.35;
+      color: #1e3a8a;
+      font-weight: 700;
+    }
+
+    .simple-ui .mode-btn.drop-hook-btn .mode-meta strong {
+      color: #ffffff;
+    }
+
+    /* Aba exclusiva para Operações Transportadora Ritmo */
+    .simple-ui .flow-group.transportadora-ritmo-group {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.16), rgba(255, 255, 255, 0.92) 52%, rgba(0, 144, 74, 0.10));
+      border: 2px solid rgba(14, 165, 233, 0.36);
+      box-shadow: 0 16px 34px rgba(14, 165, 233, 0.12), inset 0 1px 0 rgba(255,255,255,0.82);
+    }
+
+    .simple-ui .transportadora-ritmo-group .flow-group-title {
+      width: fit-content;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(14, 165, 233, 0.13);
+      border: 1px solid rgba(14, 165, 233, 0.28);
+      color: #075985 !important;
+      font-weight: 900;
+    }
+
+    .simple-ui .transportadora-ritmo-group .flow-group-title::after {
+      display: none;
+    }
+
 
     /* Botão global para desistência do atendimento */
     .return-initial-floating {
@@ -1847,6 +1975,44 @@
     let dropHookManeuverDriver = null;
     let dropHookManeuverPlate = '';
     let dropHookAlsoUnload = false;
+    let dropHookQuickMode = false;
+    let baldeioQuickMode = false;
+
+    function isQuickPlateMode() {
+      return dropHookQuickMode || baldeioQuickMode;
+    }
+
+    function normalizeCarrierName(value = '') {
+      return (value || '')
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, ' ')
+        .trim();
+    }
+
+    function isRitmoOrJslDriver(driver = sessionDriver) {
+      if (!driver) return false;
+      const carrier = normalizeCarrierName(driver.transportadora || '');
+      return carrier.includes('RITMO') || /(^|\s)JSL($|\s)/.test(carrier);
+    }
+
+    function isDropDriverAuthorized(driver = sessionDriver) {
+      return !!driver && isRitmoOrJslDriver(driver) && (
+        driver.dropAutorizado === true ||
+        driver.motoristaDrop === true ||
+        driver.dropHookAutorizado === true
+      );
+    }
+
+    function isRitmoDriverAuthorized(driver = sessionDriver) {
+      return !!driver && (
+        driver.baldeioRitmoAutorizado === true ||
+        driver.motoristaRitmo === true ||
+        driver.ritmoBaldeioAutorizado === true
+      );
+    }
 
     function resetAttendanceStateForInitialScreen() {
       currentMode = null;
@@ -1876,6 +2042,8 @@
       dropHookManeuverDriver = null;
       dropHookManeuverPlate = '';
       dropHookAlsoUnload = false;
+      dropHookQuickMode = false;
+      baldeioQuickMode = false;
     }
 
     function updateReturnInitialButtonVisibility() {
@@ -2099,6 +2267,7 @@
         cavalo: document.getElementById('truck-plate')?.value || '',
         carreta: document.getElementById('trailer-plate')?.value || '',
         isDropHook: !!isDropHookFlow,
+        quickDrop: !!isDropHookFlow && !!dropHookQuickMode,
         motoristaManobra: isDropHookFlow ? (dropHookTripDriver?.name || sessionDriver?.name || '') : (document.getElementById('driver-name')?.value || sessionDriver?.name || ''),
         cpfMotoristaManobra: isDropHookFlow ? (dropHookTripCpf || sessionCpf || '') : (sessionCpf || normalizeDigits(document.getElementById('driver-cpf')?.value || '')),
         motoristaViagem: isDropHookFlow ? (document.getElementById('driver-name')?.value || dropHookManeuverDriver?.name || '') : (dropHookTripDriver?.name || ''),
@@ -2460,22 +2629,67 @@
     }
 
     // --- PRIORIDADE ---
+    // Matriz operacional oficial (1 = maior prioridade):
+    // 1 TOP18 aderente | 2 FOB aderente | 3 Dedicada Vendas aderente
+    // 4 Vendas/HUB aderentes | 5 TOP18 não aderente | 6 Dedicada aderente Transf
+    // 7 Transf aderente | 8 Dedicada não aderente | 9 FOB não aderente
+    // 10 Vendas/HUB não aderentes | 11 Transf não aderente
     function getPriorityInfo(sheetRow) {
       let isPriority = false;
       let isOtif = false;
       let isTop18 = false;
       let isAderente = false;
+      let isNonAdherent = false;
       let isAntecipacao = false;
       let isGradeQueimada = false;
       let isAtrasado = false;
 
-      if (!sheetRow) return { label: 'NORMAL', level: 0, isPriority, isOtif, isTop18, isAderente, isAntecipacao, isGradeQueimada, isAtrasado };
+      const emptyResult = (statusLabel = 'NORMAL') => ({
+        label: 'NORMAL',
+        matrixLabel: 'NORMAL',
+        code: 'sem_matriz',
+        rank: 99,
+        level: 99,
+        statusLabel,
+        isPriority,
+        isOtif,
+        isTop18,
+        isAderente,
+        isNonAdherent,
+        isAntecipacao,
+        isGradeQueimada,
+        isAtrasado
+      });
+
+      if (!sheetRow) return emptyResult();
 
       const canal = (sheetRow[headerMap.canal] || '').toString().trim().toUpperCase();
       const dateStr = (sheetRow[headerMap.data] || '').toString().trim();
       const timeStr = (sheetRow[headerMap.agenda] || '').toString().trim();
-      const segmento = (sheetRow[headerMap.xtAdicional] || '').toString().toUpperCase();
-      isTop18 = segmento.includes('TOP18') || segmento.includes('TOP 18');
+      const segmento = (sheetRow[headerMap.xtAdicional] || '').toString();
+      const cliente = (sheetRow[headerMap.cliente] || '').toString();
+      const transportadora = (sheetRow[headerMap.transportadora] || '').toString();
+      const deposito = (sheetRow[headerMap.deposito] || '').toString();
+      const produto = (sheetRow[headerMap.produto] || '').toString();
+      const descricao = (sheetRow[headerMap.descricao] || '').toString();
+
+      const normalizePriorityText = (value) => (value || '')
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+
+      const ctx = normalizePriorityText([segmento, cliente, transportadora, deposito, produto, descricao].filter(Boolean).join(' '));
+      const segmentoNorm = normalizePriorityText(segmento);
+      const clienteNorm = normalizePriorityText(cliente);
+      const transpNorm = normalizePriorityText(transportadora);
+
+      const SALES_HUB_CHANNELS = new Set(['Y001', 'Y002', 'Y055']);
+      isOtif = SALES_HUB_CHANNELS.has(canal);
+      // TOP18 é uma marcação adicional apenas para Vendas/HUB.
+      isTop18 = isOtif && (segmentoNorm.includes('TOP18') || segmentoNorm.includes('TOP_18'));
 
       const extractDateTime = (dStr, tStr) => {
         let d = (dStr || '').toString().trim();
@@ -2488,7 +2702,7 @@
         }
 
         t = t.replace(/\s+/g, '');
-        if (t.includes('h')) t = t.replace('h', ':');
+        if (t.toLowerCase().includes('h')) t = t.toLowerCase().replace('h', ':');
 
         const parseDate = (x) => {
           if (!x) return null;
@@ -2531,64 +2745,97 @@
       };
 
       const scheduledDateTime = extractDateTime(dateStr, timeStr);
-      if (!scheduledDateTime) {
-        return { label: 'NORMAL', level: 0, isPriority, isOtif, isTop18, isAderente, isAntecipacao, isGradeQueimada, isAtrasado };
-      }
+      let statusLabel = 'NO PRAZO';
 
-      const OTIF_CANAIS = new Set(['Y001','Y002','Y055']);
-      const ADERENTE_CANAIS = new Set(['Y004','Y006']);
+      if (scheduledDateTime) {
+        const now = new Date();
+        const today = new Date(now); today.setHours(0, 0, 0, 0);
+        const scheduledDay = new Date(scheduledDateTime); scheduledDay.setHours(0, 0, 0, 0);
 
-      isOtif = OTIF_CANAIS.has(canal);
-      isAderente = ADERENTE_CANAIS.has(canal);
-
-      const now = new Date();
-      const today = new Date(now); today.setHours(0, 0, 0, 0);
-      const scheduledDay = new Date(scheduledDateTime); scheduledDay.setHours(0, 0, 0, 0);
-
-      if (today.getTime() > scheduledDay.getTime()) {
-        isGradeQueimada = true;
-        return { label: 'GRADE QUEIMADA', level: 3, isPriority: true, isOtif, isTop18, isAderente, isAntecipacao, isGradeQueimada, isAtrasado };
-      }
-
-      if (today.getTime() < scheduledDay.getTime()) {
-        if (isOtif) {
-          isPriority = true;
-          if (isTop18) return { label: 'OTIF/TOP 18', level: 1, isPriority, isOtif, isTop18, isAderente, isAntecipacao, isGradeQueimada, isAtrasado };
-          return { label: 'OTIF', level: 1, isPriority, isOtif, isTop18, isAderente, isAntecipacao, isGradeQueimada, isAtrasado };
+        if (today.getTime() > scheduledDay.getTime()) {
+          isGradeQueimada = true;
+          isNonAdherent = true;
+          statusLabel = 'GRADE QUEIMADA';
+        } else if (today.getTime() === scheduledDay.getTime()) {
+          const diffMs = now.getTime() - scheduledDateTime.getTime();
+          if (diffMs > (60 * 60 * 1000)) {
+            isAtrasado = true;
+            isNonAdherent = true;
+            statusLabel = 'PERDA DE AGENDA';
+          } else {
+            const plannedHour = scheduledDateTime.getHours();
+            if ([21, 22, 23].includes(plannedHour) && now.getTime() < scheduledDateTime.getTime()) {
+              isAntecipacao = true;
+              statusLabel = 'ANTECIPAÇÃO';
+            }
+          }
         }
-        if (isAderente) {
-          isPriority = true;
-          return { label: 'ADERENTE', level: 1, isPriority, isOtif, isTop18, isAderente, isAntecipacao, isGradeQueimada, isAtrasado };
-        }
-        return { label: 'NORMAL', level: 0, isPriority, isOtif, isTop18, isAderente, isAntecipacao, isGradeQueimada, isAtrasado };
+      } else {
+        // Sem agenda não há como afirmar aderência. Mantém fora da matriz para não inventar prioridade.
+        return emptyResult('SEM AGENDA');
       }
 
-      const plannedHour = scheduledDateTime.getHours();
-      if (plannedHour >= 20 && plannedHour <= 23) {
-        isAntecipacao = true;
-        isPriority = true;
-        return { label: 'ANTECIPAÇÃO', level: 1, isPriority, isOtif, isTop18, isAderente, isAntecipacao, isGradeQueimada, isAtrasado };
+      isAderente = !isNonAdherent;
+
+      // Y006 pode representar Transferência ou Dedicada. O contexto da DT define o perfil.
+      const explicitDedicated = ctx.includes('DEDICAD');
+      const explicitTransfer = ctx.includes('TRANSF') || ctx.includes('TRANSFER');
+      const explicitSales = ctx.includes('VENDA') || ctx.includes('SALES');
+      const internalClient = clienteNorm.includes('HNK_BR') || clienteNorm.includes('HEINEKEN_BRASIL') || clienteNorm.includes('INDUSTRIA_DE_BEBIDAS');
+      const dedicated = explicitDedicated || transpNorm.includes('JSL');
+      const sales = explicitSales || (dedicated && !explicitTransfer && !internalClient);
+
+      const make = (rank, code, label) => ({
+        label,
+        matrixLabel: label,
+        code,
+        rank,
+        level: rank,
+        statusLabel,
+        isPriority: true,
+        isOtif,
+        isTop18,
+        isAderente,
+        isNonAdherent,
+        isAntecipacao,
+        isGradeQueimada,
+        isAtrasado,
+        isDedicated: dedicated,
+        isSales: sales,
+        isTransfer: canal === 'Y006' && !sales
+      });
+
+      // 1 e 5 — TOP18 (sempre acima das demais classificações do mesmo grupo).
+      if (isTop18) {
+        return isAderente
+          ? make(1, 'top18_aderente', 'TOP18 aderente')
+          : make(5, 'top18_nao_aderente', 'TOP18 não aderente');
       }
 
-      const diffMs = now.getTime() - scheduledDateTime.getTime();
-
-      if (diffMs > (60 * 60 * 1000)) {
-        isAtrasado = true;
-        return { label: 'PERDA DE AGENDA', level: 2, isPriority: true, isOtif, isTop18, isAderente, isAntecipacao, isGradeQueimada, isAtrasado };
+      // 2 e 9 — Y004 = FOB.
+      if (canal === 'Y004') {
+        return isAderente
+          ? make(2, 'fob_aderente', 'FOB aderente')
+          : make(9, 'fob_nao_aderente', 'FOB não aderente');
       }
 
-      if (isOtif) {
-        isPriority = true;
-        if (isTop18) return { label: 'OTIF/TOP 18', level: 1, isPriority, isOtif, isTop18, isAderente, isAntecipacao, isGradeQueimada, isAtrasado };
-        return { label: 'OTIF', level: 1, isPriority, isOtif, isTop18, isAderente, isAntecipacao, isGradeQueimada, isAtrasado };
+      // 3, 6, 7, 8 e 11 — Y006 = Dedicada/Transferência.
+      if (canal === 'Y006') {
+        if (isAderente && dedicated && sales) return make(3, 'dedicada_vendas_aderente', 'Dedicada Vendas aderente');
+        if (isAderente && dedicated) return make(6, 'dedicada_transf_aderente', 'Dedicada aderente Transf');
+        if (isAderente) return make(7, 'transf_aderente', 'Transf aderente');
+        if (dedicated) return make(8, 'dedicada_nao_aderente', 'Dedicada não aderente');
+        return make(11, 'transf_nao_aderente', 'Transf não aderente');
       }
 
-      if (isAderente) {
-        isPriority = true;
-        return { label: 'ADERENTE', level: 1, isPriority, isOtif, isTop18, isAderente, isAntecipacao, isGradeQueimada, isAtrasado };
+      // 4 e 10 — Y001/Y002 = Vendas | Y055 = HUB.
+      if (SALES_HUB_CHANNELS.has(canal)) {
+        return isAderente
+          ? make(4, 'vendas_hub_aderentes', 'Vendas/HUB aderentes')
+          : make(10, 'vendas_hub_nao_aderentes', 'Vendas/HUB não aderentes');
       }
 
-      return { label: 'NORMAL', level: 0, isPriority, isOtif, isTop18, isAderente, isAntecipacao, isGradeQueimada, isAtrasado };
+      return emptyResult(statusLabel);
     }
 
     // --- Operação/Movimento (para salvar no Firestore) ---
@@ -2628,7 +2875,9 @@
       }
 
       if (mode === 'RITMO') {
-        return transp ? `Baldeio - ${transp}` : 'Baldeio';
+        const base = transp ? `Baldeio - ${transp}` : 'Baldeio';
+        if (baldeioQuickMode) return `${base} - ${loadAlsoUnload ? 'Carga e Descarga' : 'Carga'}`;
+        return base;
       }
 
       if (mode === 'HIDROMAN') return 'Hidroman';
@@ -2685,9 +2934,16 @@
           lastDropHookMotoristaViagemCpf: driverData.motoristaViagem?.cpf || driverData.dropHookTripCpf || '',
           lastDropHookMotoristaViagem: driverData.motoristaViagem?.nome || driverData.dropHookTripDriver?.name || '',
           lastPriority: {
+            label: pInfoForDriver.label || 'NORMAL',
+            code: pInfoForDriver.code || 'sem_matriz',
+            rank: Number.isFinite(pInfoForDriver.rank) ? pInfoForDriver.rank : 99,
+            level: Number.isFinite(pInfoForDriver.level) ? pInfoForDriver.level : 99,
+            statusLabel: pInfoForDriver.statusLabel || '',
             isPriority: !!pInfoForDriver.isPriority,
             isOtif: !!pInfoForDriver.isOtif,
             isTop18: !!pInfoForDriver.isTop18,
+            isAderente: !!pInfoForDriver.isAderente,
+            isNonAdherent: !!pInfoForDriver.isNonAdherent,
             isAntecipacao: !!pInfoForDriver.isAntecipacao,
             isGradeQueimada: !!pInfoForDriver.isGradeQueimada,
             isAtrasado: !!pInfoForDriver.isAtrasado,
@@ -2707,15 +2963,12 @@
         const pInfo = priorityInfo || getPriorityInfo(originalSheetData || {});
 
         const reasons = [];
-        if (pInfo.label === 'OTIF/TOP 18') reasons.push('OTIF', 'TOP 18');
-        else if (pInfo.label === 'OTIF') reasons.push('OTIF');
-        else if (pInfo.label === 'ADERENTE') reasons.push('ADERENTE');
-        else if (pInfo.label === 'ANTECIPAÇÃO') reasons.push('ANTECIPAÇÃO');
-        else if (pInfo.label === 'PERDA DE AGENDA') reasons.push('PERDA DE AGENDA');
-        else if (pInfo.label === 'GRADE QUEIMADA') reasons.push('GRADE QUEIMADA');
+        if (Number.isFinite(pInfo.rank) && pInfo.rank < 99) reasons.push(`P${pInfo.rank}`, pInfo.label);
+        if (pInfo.isTop18) reasons.push('TOP 18');
+        if (pInfo.statusLabel && pInfo.statusLabel !== 'NO PRAZO') reasons.push(pInfo.statusLabel);
 
         const label = pInfo.label || 'NORMAL';
-        const level = (typeof pInfo.level === 'number') ? pInfo.level : (label === 'NORMAL' ? 0 : 1);
+        const level = Number.isFinite(pInfo.rank) ? pInfo.rank : 99;
 
         const canalValue = (originalSheetData?.[headerMap.canal] || '').toString().trim().toUpperCase();
         const segmentoValue = (originalSheetData?.[headerMap.xtAdicional] || '').toString();
@@ -2776,15 +3029,23 @@
           segmento: segmentoValue,
           prioridade: {
             label,
+            matrixLabel: pInfo.matrixLabel || label,
+            code: pInfo.code || 'sem_matriz',
+            rank: Number.isFinite(pInfo.rank) ? pInfo.rank : 99,
             level,
+            statusLabel: pInfo.statusLabel || '',
             reasons,
             isPriority: !!pInfo.isPriority,
             isOtif: !!pInfo.isOtif,
             isTop18: !!pInfo.isTop18,
             isAderente: !!pInfo.isAderente,
+            isNonAdherent: !!pInfo.isNonAdherent,
             isAntecipacao: !!pInfo.isAntecipacao,
             isGradeQueimada: !!pInfo.isGradeQueimada,
             isAtrasado: !!pInfo.isAtrasado,
+            isDedicated: !!pInfo.isDedicated,
+            isSales: !!pInfo.isSales,
+            isTransfer: !!pInfo.isTransfer,
             updatedAt: new Date().toISOString(),
           }
         };
@@ -2918,6 +3179,19 @@
       }, 0);
     }
 
+    function continueAfterDriverReady() {
+      if (isRitmoOrJslDriver(sessionDriver) && isDropDriverAuthorized(sessionDriver)) {
+        fileStatus.textContent = 'Motorista Drop autorizado. Abrindo acesso rápido...';
+        currentMode = 'DROP_HOOK';
+        isDropHookFlow = true;
+        setFlowSelection('DROP_HOOK', 'Drop & Hook', 'DROP_HOOK', 'MOTORISTA_VIAGEM');
+        renderModeForm('DROP_HOOK');
+        return;
+      }
+
+      renderActionSelector();
+    }
+
     function renderCpfGate() {
       resultsArea.innerHTML = '';
 
@@ -2990,7 +3264,7 @@
 
         if (sessionDriver && st.ok) {
           fileStatus.textContent = 'Tudo certo. Bem-vindo!';
-          renderActionSelector();
+          continueAfterDriverReady();
           return;
         }
 
@@ -3000,7 +3274,7 @@
         }
 
         fileStatus.textContent = 'Integração necessária.';
-        postIntegrationNavigate = () => { renderActionSelector(); };
+        postIntegrationNavigate = () => { continueAfterDriverReady(); };
         await startIntegrationFlow(cpfMasked, { autoStartTest: true });
       };
 
@@ -3091,7 +3365,7 @@
         sessionDriver = payload;
 
         fileStatus.textContent = 'Cadastro salvo. Iniciando integração...';
-        postIntegrationNavigate = () => { renderActionSelector(); };
+        postIntegrationNavigate = () => { continueAfterDriverReady(); };
 
         await startIntegrationFlow(cpfMasked, { autoStartTest: true });
       });
@@ -3122,6 +3396,10 @@
       dropHookManeuverDriver = null;
       dropHookManeuverPlate = '';
       dropHookAlsoUnload = false;
+      dropHookQuickMode = false;
+      baldeioQuickMode = false;
+      const specialCarrierDriver = isRitmoOrJslDriver(sessionDriver);
+      const dropDriverAuthorized = isDropDriverAuthorized(sessionDriver);
 
       actionArea.innerHTML = `
         ${renderProgressBar(2, ['Identificação', 'Fluxo', 'Dados', 'Conferência'])}
@@ -3135,8 +3413,15 @@
             </div>
           </div>
 
-          <div class="flow-group">
+          <div class="flow-group operacoes-principais-group">
             <div class="flow-group-title">Operações principais</div>
+            <div class="main-process-alert" role="note" aria-label="Orientação sobre operações principais">
+              <div class="main-process-alert-icon" aria-hidden="true">📌</div>
+              <div>
+                <div class="main-process-alert-title">Processos principais</div>
+                <div class="main-process-alert-text">Carregamento, descarga, insumos e transferências vindas de cliente ficam nestas opções.</div>
+              </div>
+            </div>
             <div class="flow-grid">
               <button data-mode="LOAD" class="mode-btn" title="Carregamento usando DT (consulta na planilha)">
                 <div class="mode-main">
@@ -3162,8 +3447,18 @@
             </div>
           </div>
 
-          <div class="flow-group">
-            <div class="flow-group-title">Operações especiais</div>
+          ${specialCarrierDriver ? `
+          <div class="flow-group transportadora-ritmo-group">
+            <div class="flow-group-title">Operações Ritmo / JSL</div>
+            <div class="ritmo-exclusive-alert" role="note" aria-label="Aviso importante sobre Drop & Hook e Baldeio">
+              <div class="ritmo-exclusive-alert-icon" aria-hidden="true">⚠️</div>
+              <div>
+                <div class="ritmo-exclusive-alert-title">Acesso por transportadora</div>
+                <div class="ritmo-exclusive-alert-text"><b>Baldeio e Drop &amp; Hook</b> são exibidos somente para motoristas da <b>Ritmo</b> ou <b>JSL</b>. ${dropDriverAuthorized
+                  ? '<b>Motorista Drop autorizado.</b> Este CPF está liberado para executar o Drop &amp; Hook.'
+                  : 'Para usar o <b>Drop &amp; Hook</b>, o CPF também precisa estar autorizado pelo ADMIN.'}</div>
+              </div>
+            </div>
             <div class="flow-grid">
               <button data-mode="RITMO" class="mode-btn" title="Baldeio: DT opcional (se vazio, gera ID interno)">
                 <div class="mode-main">
@@ -3176,17 +3471,25 @@
                 <span class="mode-arrow">›</span>
               </button>
 
-              <button data-mode="DROP_HOOK" class="mode-btn drop-hook-btn" title="Drop & Hook: informe o CPF do motorista manobra e se também haverá descarga">
+              <button data-mode="DROP_HOOK" class="mode-btn drop-hook-btn" title="${dropDriverAuthorized ? 'CPF autorizado para Drop & Hook' : 'Liberação do ADMIN necessária'}">
                 <div class="mode-main">
                   <div class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 7h4a3 3 0 0 1 0 6H9"/><path d="M17 17h-4a3 3 0 0 1 0-6h2"/><path d="M10 12h4"/></svg></div>
                   <div class="mode-copy">
                     <div class="mode-title">Drop & Hook</div>
-                    <div class="mode-meta">Registra DROP, carga e retorno</div>
+                    <div class="mode-meta">${dropDriverAuthorized
+                      ? 'Registra DROP, carga e retorno · <strong>Motorista autorizado</strong>'
+                      : 'Bloqueado · solicite a liberação do seu CPF ao administrador'}</div>
                   </div>
                 </div>
                 <span class="mode-arrow">›</span>
               </button>
+            </div>
+          </div>
+          ` : ''}
 
+          <div class="flow-group">
+            <div class="flow-group-title">Operações especiais</div>
+            <div class="flow-grid">
               <button data-mode="HIDROMAN" class="mode-btn" title="HIDROMAN: vai direto para o cadastro do motorista (sem planilha)">
                 <div class="mode-main">
                   <div class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3s4 4.7 4 8a4 4 0 1 1-8 0c0-3.3 4-8 4-8Z"/><path d="M18 16h2"/><path d="M17 19h4"/></svg></div>
@@ -3220,7 +3523,16 @@
       document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
           await unlockAudio();
-          currentMode = btn.dataset.mode;
+          const requestedMode = btn.dataset.mode;
+          if ((requestedMode === 'RITMO' || requestedMode === 'DROP_HOOK') && !isRitmoOrJslDriver(sessionDriver)) {
+            displayError('Baldeio e Drop & Hook são exclusivos para motoristas Ritmo ou JSL.', 7000);
+            return;
+          }
+          if (requestedMode === 'DROP_HOOK' && !isDropDriverAuthorized(sessionDriver)) {
+            displayError('Seu CPF não está autorizado para Drop & Hook. Procure o administrador Joel.', 7000);
+            return;
+          }
+          currentMode = requestedMode;
 
           if (currentMode === 'INTEGRACAO') {
             setFlowSelection('INTEGRACAO', 'Integração', 'INTEGRACAO', 'TESTE');
@@ -3245,6 +3557,20 @@
         const mode = btn.dataset.mode;
         if (!mode) return;
 
+        if (mode === 'DROP_HOOK') {
+          const authorized = isDropDriverAuthorized(sessionDriver);
+          btn.disabled = !authorized;
+          btn.classList.toggle('opacity-50', !authorized);
+          btn.classList.toggle('cursor-not-allowed', !authorized);
+          btn.title = authorized
+            ? 'CPF autorizado para Drop & Hook'
+            : 'Drop & Hook bloqueado: liberação do ADMIN necessária';
+
+          const arrow = btn.querySelector('.mode-arrow');
+          if (arrow) arrow.textContent = authorized ? '›' : 'Bloq.';
+          return;
+        }
+
         if (needsSheet.has(mode)) {
           const disabled = !isSheetReady;
           btn.disabled = disabled;
@@ -3259,6 +3585,22 @@
     }
 
     function renderModeForm(mode) {
+      if ((mode === 'RITMO' || mode === 'DROP_HOOK') && !isRitmoOrJslDriver(sessionDriver)) {
+        currentMode = null;
+        isDropHookFlow = false;
+        renderActionSelector();
+        displayError('Baldeio e Drop & Hook são exclusivos para motoristas Ritmo ou JSL.', 7000);
+        return;
+      }
+      if (mode === 'DROP_HOOK' && !isDropDriverAuthorized(sessionDriver)) {
+        currentMode = null;
+        isDropHookFlow = false;
+        renderActionSelector();
+        displayError('Seu CPF não está autorizado para Drop & Hook. Procure o administrador Joel.', 7000);
+        return;
+      }
+      dropHookQuickMode = false;
+      baldeioQuickMode = false;
       resultsArea.innerHTML = '';
       pendingUnloadDt = '';
       requireUnloadDtInForm = false;
@@ -3362,21 +3704,31 @@
           <div class="section space-y-3">
             <div class="step">PASSO 1</div>
             <div class="big-title text-white">Drop & Hook</div>
+            <div class="form-hint-box text-sm text-gray-200">
+              ⚡ <b>Acesso rápido ativado:</b> seu CPF já está autorizado como Motorista Drop.
+            </div>
+            <div class="ritmo-exclusive-alert" role="note" aria-label="Aviso importante sobre exclusividade do Drop & Hook">
+              <div class="ritmo-exclusive-alert-icon" aria-hidden="true">⚠️</div>
+              <div>
+                <div class="ritmo-exclusive-alert-title">Uso exclusivo</div>
+                <div class="ritmo-exclusive-alert-text">O <b>Drop &amp; Hook</b> fica disponível somente para motoristas da <b>Ritmo</b> ou <b>JSL</b> com CPF autorizado.</div>
+              </div>
+            </div>
+
             <div class="help">
-              Informe apenas o CPF do <b>motorista viagem</b>. Depois o sistema perguntará se também vai descarregar.
-              O motorista identificado no início será considerado <b>motorista manobra</b>.
+              Escolha a operação. Na próxima tela, confirme apenas as placas do cavalo e da carreta.
             </div>
 
-            <input type="text" id="drop-hook-maneuver-cpf" inputmode="numeric"
-              class="form-input input-xl rounded-lg" placeholder="CPF do motorista viagem">
-
-            <div id="drop-hook-maneuver-preview" class="form-hint-box text-sm text-gray-200">
-              Ao continuar, vou buscar o cadastro do motorista viagem no Firebase.
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button id="drop-hook-load-only" class="btn-ghost w-full py-5 rounded-xl text-xl font-extrabold">
+                CARGA
+                <span style="display:block;font-size:.78rem;font-weight:700;opacity:.8;">Somente carga</span>
+              </button>
+              <button id="drop-hook-load-unload" class="btn-green w-full py-5 rounded-xl text-xl font-extrabold">
+                CARGA E DESCARGA
+                <span style="display:block;font-size:.78rem;font-weight:700;opacity:.9;">Contar as duas operações</span>
+              </button>
             </div>
-
-            <button id="drop-hook-continue" class="btn-green w-full py-4 rounded-xl text-lg font-extrabold">
-              Continuar ➡️
-            </button>
 
             ${backBtn}
           </div>
@@ -3583,53 +3935,16 @@
       }
 
       if (mode === 'DROP_HOOK') {
-        const dropCpfEl = document.getElementById('drop-hook-maneuver-cpf');
-        const dropPreview = document.getElementById('drop-hook-maneuver-preview');
-        if (dropCpfEl) IMask(dropCpfEl, { mask: '000.000.000-00' });
-
-        const refreshDropPreview = async () => {
-          const cpf = normalizeDigits(dropCpfEl?.value || '');
-          if (!dropPreview) return;
-          if (cpf.length !== 11) {
-            dropPreview.innerHTML = 'Digite o CPF completo do <b>motorista viagem</b> para consultar o cadastro.';
-            return;
-          }
-          dropPreview.innerHTML = 'Buscando motorista viagem...';
-          const data = await loadDriverByCpf(cpf);
-          if (data) {
-            dropPreview.innerHTML = `
-              <div class="font-extrabold text-white">Motorista viagem encontrado</div>
-              <div>Nome: <b>${escapeHtml(data.name || '')}</b></div>
-              <div>Transportadora: <b>${escapeHtml(data.transportadora || 'Não informada')}</b></div>
-              <div>Telefone: <b>${escapeHtml(data.phone || 'Não informado')}</b></div>
-            `;
-          } else {
-            dropPreview.innerHTML = 'Motorista viagem não encontrado no cadastro. Cadastre esse motorista antes de seguir com Drop & Hook.';
-          }
-        };
-
-        let dropTimer = null;
-        dropCpfEl?.addEventListener('input', () => {
-          if (dropTimer) clearTimeout(dropTimer);
-          dropTimer = setTimeout(refreshDropPreview, 350);
-        });
-        dropCpfEl?.addEventListener('blur', refreshDropPreview);
-
-        document.getElementById('drop-hook-continue')?.addEventListener('click', async () => {
+        const beginQuickDrop = async (willUnload) => {
           await unlockAudio();
-          const manobraCpf = normalizeDigits(dropCpfEl?.value || '');
-          if (manobraCpf.length !== 11) return displayError('Digite um CPF válido para o motorista viagem.', 5000, { field: dropCpfEl });
-
-          const manobraDriver = await loadDriverByCpf(manobraCpf);
-          if (!manobraDriver) {
-            return displayError('Motorista viagem não encontrado. Cadastre o motorista viagem antes de marcar Drop & Hook.', 7000, { field: dropCpfEl });
+          if (!isDropDriverAuthorized(sessionDriver)) {
+            return displayError('Seu CPF não está autorizado para Drop & Hook. Procure o administrador Joel.', 7000);
           }
-
-          const willUnload = await openDropHookUnloadQuestionModal();
 
           isDropHookFlow = true;
-          dropHookManeuverCpf = manobraCpf;
-          dropHookManeuverDriver = manobraDriver;
+          dropHookQuickMode = true;
+          dropHookManeuverCpf = '';
+          dropHookManeuverDriver = null;
           dropHookAlsoUnload = !!willUnload;
           loadAlsoUnload = !!willUnload;
           dropHookTripCpf = normalizeDigits(sessionCpf);
@@ -3641,7 +3956,7 @@
           showUnloadInputs = false;
           requireUnloadDtInForm = false;
           pendingUnloadDt = '';
-          presetTransportadora = (sessionDriver?.transportadora || manobraDriver.transportadora || '').toString().trim().toUpperCase();
+          presetTransportadora = (sessionDriver?.transportadora || '').toString().trim().toUpperCase();
           lockTransportadora = false;
           setFlowSelection(
             'DROP_HOOK',
@@ -3660,8 +3975,8 @@
             dropHookAlsoUnload: willUnload,
             motoristaManobraCpf: normalizeDigits(sessionCpf),
             motoristaManobra: sessionDriver?.name || '',
-            motoristaViagemCpf: manobraCpf,
-            motoristaViagem: manobraDriver.name || ''
+            motoristaViagemCpf: '',
+            motoristaViagem: ''
           });
 
           showDriverForm([{
@@ -3669,12 +3984,13 @@
             [headerMap.cliente]: 'DROP & HOOK',
             [headerMap.produto]: '',
             [headerMap.plt]: '',
-            [headerMap.transportadora]: sessionDriver?.transportadora || manobraDriver.transportadora || '',
+            [headerMap.transportadora]: sessionDriver?.transportadora || '',
             [headerMap.deposito]: 'FÁBRICA'
           }], { modeLabel: willUnload ? 'Drop & Hook - Carga e Descarga' : 'Drop & Hook - Carga', isManualOverride: true });
-        });
+        };
 
-        dropCpfEl?.focus();
+        document.getElementById('drop-hook-load-only')?.addEventListener('click', () => beginQuickDrop(false));
+        document.getElementById('drop-hook-load-unload')?.addEventListener('click', () => beginQuickDrop(true));
       }
 
       if (mode === 'HIDROMAN') {
@@ -3696,6 +4012,79 @@
       }
 
       if (mode === 'RITMO') {
+        const goRitmoQuickChoice = () => {
+          const backBtnB = `<button id="back-to-baldeio-transp" class="btn-ghost w-full py-3 rounded-xl text-base font-bold">⬅ Voltar</button>`;
+          actionArea.innerHTML = `
+            ${renderProgressBar(2, ['Identificação', 'Fluxo', 'Dados', 'Conferência'])}
+            <div class="section space-y-3">
+              <div class="step">BALDEIO RITMO</div>
+              <div class="big-title text-white">Escolha a operação</div>
+              <div class="form-hint-box text-sm text-gray-200">
+                ⚡ CPF autorizado para Baldeio Ritmo: depois, confira somente as placas do cavalo e da carreta.
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button id="baldeio-ritmo-load-only" class="btn-ghost w-full py-5 rounded-xl text-xl font-extrabold">
+                  CARGA
+                  <span style="display:block;font-size:.78rem;font-weight:700;opacity:.8;">Somente carga</span>
+                </button>
+                <button id="baldeio-ritmo-load-unload" class="btn-green w-full py-5 rounded-xl text-xl font-extrabold">
+                  CARGA E DESCARGA
+                  <span style="display:block;font-size:.78rem;font-weight:700;opacity:.9;">Contar as duas operações</span>
+                </button>
+              </div>
+
+              ${backBtnB}
+            </div>
+          `;
+
+          document.getElementById('back-to-baldeio-transp')?.addEventListener('click', () => {
+            renderModeForm('RITMO');
+          });
+
+          const beginQuickBaldeio = async (willUnload) => {
+            await unlockAudio();
+            if (!isRitmoDriverAuthorized(sessionDriver)) {
+              baldeioQuickMode = false;
+              displayError('Seu CPF não está autorizado para o fluxo rápido de Baldeio Ritmo. Solicite a liberação no Painel do Analista.', 7000);
+              return;
+            }
+            baldeioQuickMode = true;
+            loadAlsoUnload = !!willUnload;
+            baldeioDtCarga = '';
+            baldeioDtDescarga = '';
+            manualPresetType = 'Baldeio';
+            hideManualExtras = true;
+            showUnloadInputs = false;
+            requireUnloadDtInForm = false;
+            pendingUnloadDt = '';
+            manualDtIdOverride = generateInternalId(willUnload ? 'BAL_RITMO_CD' : 'BAL_RITMO_CARGA');
+
+            setFlowSelection(
+              'BALDEIO_RITMO',
+              willUnload ? 'Baldeio Ritmo - Carga e Descarga' : 'Baldeio Ritmo - Carga',
+              'BALDEIO',
+              willUnload ? 'RITMO_CARGA_E_DESCARGA' : 'RITMO_CARGA'
+            );
+            await registerFlowClick({
+              baldeioQuickMode: true,
+              contabilizarCarga: true,
+              contabilizarDescarga: !!willUnload
+            });
+
+            showDriverForm(
+              [{ [headerMap.dts]: manualDtIdOverride }],
+              {
+                modeLabel: willUnload ? 'Baldeio Ritmo - Carga e Descarga' : 'Baldeio Ritmo - Carga',
+                isManualOverride: true
+              }
+            );
+          };
+
+          document.getElementById('baldeio-ritmo-load-only')?.addEventListener('click', () => beginQuickBaldeio(false));
+          document.getElementById('baldeio-ritmo-load-unload')?.addEventListener('click', () => beginQuickBaldeio(true));
+        };
+
         const goBaldeioStep2 = () => {
           const backBtnB = `<button id="back-to-baldeio-transp" class="btn-ghost w-full py-3 rounded-xl text-base font-bold">⬅ Voltar</button>`;
           actionArea.innerHTML = `
@@ -3756,12 +4145,15 @@
 
           if (presetTransportadora === 'JSL') {
             setFlowSelection('BALDEIO_JSL', 'Baldeio - JSL', 'BALDEIO', 'JSL');
+            await registerFlowClick();
+            goBaldeioStep2();
+          } else if (isRitmoDriverAuthorized(sessionDriver)) {
+            goRitmoQuickChoice();
           } else {
             setFlowSelection('BALDEIO_RITMO', 'Baldeio - Ritmo', 'BALDEIO', 'RITMO');
+            await registerFlowClick();
+            goBaldeioStep2();
           }
-
-          await registerFlowClick();
-          goBaldeioStep2();
         };
 
         document.getElementById('baldeio-ritmo')?.addEventListener('click', () => chooseTransp('RITMO'));
@@ -4166,15 +4558,17 @@
           ${isDropHookFlow ? `
             <div class="section space-y-2 border border-yellow-400/30 drop-hook-manobra-panel">
               <div class="step">DROP & HOOK</div>
-              <div class="big-title text-white">Motoristas da operação</div>
+              <div class="big-title text-white">${dropHookQuickMode ? 'Operação rápida' : 'Motoristas da operação'}</div>
               <div class="summary-grid">
                 ${buildSummaryItem('Motorista manobra', dropHookTripDriver?.name || sessionDriver?.name || 'Não informado')}
                 ${buildSummaryItem('CPF manobra', (dropHookTripCpf || sessionCpf) ? (dropHookTripCpf || sessionCpf).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado')}
-                ${buildSummaryItem('Motorista viagem', dropHookManeuverDriver?.name || 'Será preenchido abaixo')}
-                ${buildSummaryItem('CPF viagem', dropHookManeuverCpf ? dropHookManeuverCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado')}
+                ${dropHookQuickMode ? '' : buildSummaryItem('Motorista viagem', dropHookManeuverDriver?.name || 'Será preenchido abaixo')}
+                ${dropHookQuickMode ? '' : buildSummaryItem('CPF viagem', dropHookManeuverCpf ? dropHookManeuverCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado')}
                 ${buildSummaryItem('Vai descarregar também?', dropHookAlsoUnload ? 'SIM - contar carga e descarga' : 'NÃO - contar apenas carga')}
               </div>
-              <div class="help">A folha impressa terá o termo de responsabilidade para portaria e checklist com os dois motoristas.</div>
+              <div class="help">${dropHookQuickMode
+                ? 'Confira somente as placas e finalize a marcação.'
+                : 'A folha impressa terá o termo de responsabilidade para portaria e checklist com os dois motoristas.'}</div>
             </div>
           ` : ''}
 
@@ -4330,6 +4724,27 @@
         if (cpfMask) cpfMask.unmaskedValue = normalizeDigits(sessionCpf);
       }
       if (sessionDriver) fillFormFields(sessionDriver);
+
+      if ((isDropHookFlow && dropHookQuickMode) || baldeioQuickMode) {
+        document.getElementById('driver-cpf')?.closest('.section')?.classList.add('hidden');
+        document.getElementById('driver-name')?.closest('.section')?.classList.add('hidden');
+        document.getElementById('manual-type')?.closest('details')?.classList.add('hidden');
+        document.getElementById('driver-renavam')?.closest('details')?.classList.add('hidden');
+
+        const vehicleTypeEl = document.getElementById('vehicle-type');
+        const cnhEl = document.getElementById('driver-cnh');
+        const axlesEl = document.getElementById('truck-axles');
+        vehicleTypeEl?.classList.add('hidden');
+        vehicleTypeEl?.nextElementSibling?.classList.add('hidden');
+        cnhEl?.closest('.grid')?.classList.add('hidden');
+        cnhEl?.closest('.grid')?.nextElementSibling?.classList.add('hidden');
+        axlesEl?.classList.add('hidden');
+
+        const printButton = document.getElementById('generate-sheet-btn');
+        if (printButton) printButton.textContent = '✅ Confirmar placas e finalizar';
+        const printHelp = printButton?.nextElementSibling;
+        if (printHelp) printHelp.textContent = 'Confira a placa do cavalo e da carreta antes de finalizar.';
+      }
 
       if (isDropHookFlow && dropHookManeuverDriver) {
         // No Drop & Hook, o formulário principal representa o Motorista Viagem.
@@ -4605,8 +5020,9 @@
             maxlength="7" value="${escapeHtml(trailerInitial)}" placeholder="ABC1234 ou ABC1D23">
         `;
         if (confirmManeuverPlateLine && confirmManeuverPlate) {
-          confirmManeuverPlateLine.classList.toggle('hidden', !summary.isDropHook);
-          confirmManeuverPlate.innerHTML = summary.isDropHook ? `
+          const showManeuverPlate = summary.isDropHook && !summary.quickDrop;
+          confirmManeuverPlateLine.classList.toggle('hidden', !showManeuverPlate);
+          confirmManeuverPlate.innerHTML = showManeuverPlate ? `
             <input id="confirm-maneuver-plate-input" class="form-input input-xl rounded-lg w-full text-center uppercase"
               maxlength="7" value="${escapeHtml(maneuverInitial)}" placeholder="ABC1234 ou ABC1D23">
           ` : '-';
@@ -4615,7 +5031,7 @@
         confirmSummary.innerHTML = [
           buildSummaryItem('Motorista manobra', summary.isDropHook ? (summary.motoristaManobra || summary.motorista) : summary.motorista),
           buildSummaryItem('CPF manobra', summary.isDropHook ? (summary.cpfMotoristaManobra || summary.cpf) : summary.cpf),
-          ...(summary.isDropHook ? [
+          ...(summary.isDropHook && !summary.quickDrop ? [
             buildSummaryItem('Motorista viagem', summary.motoristaViagem),
             buildSummaryItem('CPF viagem', summary.cpfMotoristaViagem)
           ] : []),
@@ -4625,7 +5041,7 @@
           buildSummaryItem('DT Descarga', summary.dtDescarga),
           buildSummaryItem('Transportadora', summary.transportadora),
           buildSummaryItem('Tipo de veículo', summary.tipoVeiculo),
-          ...(summary.isDropHook ? [buildSummaryItem('Placa do manobra', summary.placaManobra || maneuverInitial)] : []),
+          ...(summary.isDropHook && !summary.quickDrop ? [buildSummaryItem('Placa do manobra', summary.placaManobra || maneuverInitial)] : []),
           buildSummaryItem('Cavalo', summary.cavalo),
           buildSummaryItem('Carreta', summary.carreta)
         ].join('');
@@ -4763,16 +5179,16 @@
         return;
       }
 
-      if (!validateField(phoneEl, "Telefone é obrigatório.", () => (phoneMask?.unmaskedValue?.length || 0) >= 10)) return;
+      if (!isQuickPlateMode() && !validateField(phoneEl, "Telefone é obrigatório.", () => (phoneMask?.unmaskedValue?.length || 0) >= 10)) return;
       if (!validateField(plateEl, "Placa do cavalo é obrigatória.", () => isValidBrazilianPlate(plateEl?.value || ''))) return;
       const trailerEl = document.getElementById('trailer-plate');
       if (trailerEl?.value?.trim() && !validateField(trailerEl, "Placa da carreta inválida.", () => isValidBrazilianPlate(trailerEl?.value || ''))) return;
       const vehicleTypeEl = document.getElementById('vehicle-type');
-      if (vehicleTypeEl && !validateField(vehicleTypeEl, "Tipo de veículo é obrigatório.")) return;
+      if (!isQuickPlateMode() && vehicleTypeEl && !validateField(vehicleTypeEl, "Tipo de veículo é obrigatório.")) return;
       const cnhEl = document.getElementById('driver-cnh');
-      if (cnhEl && !validateField(cnhEl, "CNH é obrigatória.", () => isValidCnh(cnhEl.value))) return;
+      if (!isQuickPlateMode() && cnhEl && !validateField(cnhEl, "CNH é obrigatória.", () => isValidCnh(cnhEl.value))) return;
       const cnhExpiryEl = document.getElementById('cnh-expiry');
-      if (cnhExpiryEl?.value?.trim() && !validateField(cnhExpiryEl, "Validade da CNH inválida.", () => isValidDateBR(cnhExpiryEl.value))) return;
+      if (!isQuickPlateMode() && cnhExpiryEl?.value?.trim() && !validateField(cnhExpiryEl, "Validade da CNH inválida.", () => isValidDateBR(cnhExpiryEl.value))) return;
 
       const unloadDtEl = document.getElementById('unload-dt');
       if (requireUnloadDtInForm && unloadDtEl) {
@@ -4868,26 +5284,43 @@
         transportadora: driverData.transportadora || ''
       };
 
-      driverData.motoristaViagem = driverData.isDropHook ? {
-        // No formulário principal ficam os dados do motorista viagem.
-        nome: driverData.name || dropHookManeuverDriver?.name || '',
-        cpf: normalizeDigits(driverData.cpf || dropHookManeuverCpf || ''),
-        telefone: normalizeDigits(driverData.phone || dropHookManeuverDriver?.phone || ''),
-        cnh: driverData.cnh || dropHookManeuverDriver?.cnh || '',
-        cnhExpiry: driverData.cnhExpiry || dropHookManeuverDriver?.cnhExpiry || '',
-        transportadora: driverData.transportadora || dropHookManeuverDriver?.transportadora || '',
-        truckPlate: sanitizePlate(driverData.truckPlate || dropHookManeuverDriver?.truckPlate || ''),
-        trailerPlate: sanitizePlate(driverData.trailerPlate || dropHookManeuverDriver?.trailerPlate || ''),
-        vehicleType: driverData.vehicleType || dropHookManeuverDriver?.vehicleType || ''
-      } : null;
+      driverData.motoristaViagem = driverData.isDropHook
+        ? (dropHookQuickMode ? {
+            nome: '',
+            cpf: '',
+            telefone: '',
+            cnh: '',
+            cnhExpiry: '',
+            transportadora: driverData.transportadora || '',
+            truckPlate: sanitizePlate(driverData.truckPlate || ''),
+            trailerPlate: sanitizePlate(driverData.trailerPlate || ''),
+            vehicleType: driverData.vehicleType || ''
+          } : {
+            // No fluxo completo, o formulário principal representa o motorista viagem.
+            nome: driverData.name || dropHookManeuverDriver?.name || '',
+            cpf: normalizeDigits(driverData.cpf || dropHookManeuverCpf || ''),
+            telefone: normalizeDigits(driverData.phone || dropHookManeuverDriver?.phone || ''),
+            cnh: driverData.cnh || dropHookManeuverDriver?.cnh || '',
+            cnhExpiry: driverData.cnhExpiry || dropHookManeuverDriver?.cnhExpiry || '',
+            transportadora: driverData.transportadora || dropHookManeuverDriver?.transportadora || '',
+            truckPlate: sanitizePlate(driverData.truckPlate || dropHookManeuverDriver?.truckPlate || ''),
+            trailerPlate: sanitizePlate(driverData.trailerPlate || dropHookManeuverDriver?.trailerPlate || ''),
+            vehicleType: driverData.vehicleType || dropHookManeuverDriver?.vehicleType || ''
+          })
+        : null;
 
       driverData.dropHookManeuverCpf = dropHookManeuverCpf || '';
       driverData.dropHookManeuverDriver = dropHookManeuverDriver || null;
       driverData.dropHookManeuverPlate = driverData.maneuverPlate || '';
       driverData.dropHookAlsoUnload = !!dropHookAlsoUnload;
-      driverData.contabilizarCarga = driverData.isDropHook ? 1 : 0;
-      driverData.contabilizarDescarga = driverData.isDropHook && dropHookAlsoUnload ? 1 : 0;
-      driverData.controleIdaRetorno = driverData.isDropHook ? (dropHookAlsoUnload ? 'CARGA_E_DESCARGA' : 'CARGA') : '';
+      driverData.baldeioQuickMode = currentMode === 'RITMO' && baldeioQuickMode;
+      driverData.contabilizarCarga = (driverData.isDropHook || driverData.baldeioQuickMode) ? 1 : 0;
+      driverData.contabilizarDescarga = driverData.isDropHook
+        ? (dropHookAlsoUnload ? 1 : 0)
+        : (driverData.baldeioQuickMode && loadAlsoUnload ? 1 : 0);
+      driverData.controleIdaRetorno = driverData.isDropHook
+        ? (dropHookAlsoUnload ? 'CARGA_E_DESCARGA' : 'CARGA')
+        : (driverData.baldeioQuickMode ? (loadAlsoUnload ? 'CARGA_E_DESCARGA' : 'CARGA') : '');
 
       driverData.operacao = computeTransportOperationLabel();
       driverData.flowKey = selectedFlowKey || '';
@@ -5502,8 +5935,22 @@
                 <p><strong>CLIENTE:</strong> ${escapeHtml(firstResult[headerMap.cliente] || 'N/A')}</p>
                 <p><strong>TRANSPORTADORA:</strong> ${escapeHtml(companyPrint || '---')}</p>
               `;
+      const printPriorityInfo = getPriorityInfo(firstResult);
+      const matrixRank = Number.isFinite(printPriorityInfo.rank) ? printPriorityInfo.rank : 99;
+      const matrixLabel = printPriorityInfo.label || 'NORMAL';
+      const operationalStatus = printPriorityInfo.statusLabel || '';
       let priorityHtml = '';
-      if (isGradeQueimada) {
+
+      if (matrixRank < 99) {
+        const statusLine = operationalStatus && operationalStatus !== 'NO PRAZO'
+          ? `<div style="font-size:10px;font-weight:800;margin-top:4px;">${escapeHtml(operationalStatus)}</div>`
+          : '';
+        priorityHtml = `<div style="width:100%; border:1.8px solid #1a1a1a; text-align:center; padding:7px 9px; background:${matrixRank <= 5 ? '#FDE68A' : '#DCFCE7'}; border-radius:0; color:#111;">
+                          <div style="font-size:11px; font-weight:900; letter-spacing:.06em; margin-bottom:3px;">PRIORIDADE P${matrixRank}</div>
+                          <div style="font-size:18px; font-weight:900; letter-spacing:.02em;">${escapeHtml(matrixLabel)}</div>
+                          ${statusLine}
+                        </div>`;
+      } else if (isGradeQueimada) {
         priorityHtml = `<div style="width:100%; border:1.8px solid #1a1a1a; text-align:center; padding:6px 9px; background:#FBBF24; border-radius:0;">
                           <div style="font-size:11px; font-weight:900; letter-spacing:.06em; margin-bottom:3px;">STATUS</div>
                           <div style="font-size:18px; font-weight:900; letter-spacing:.03em;">GRADE QUEIMADA</div>
@@ -5517,21 +5964,6 @@
         priorityHtml = `<div style="width:100%; border:1.8px solid #1a1a1a; text-align:center; padding:6px 9px; background:#F87171; border-radius:0; color:#111;">
                           <div style="font-size:11px; font-weight:900; letter-spacing:.06em; margin-bottom:3px;">STATUS</div>
                           <div style="font-size:18px; font-weight:900; letter-spacing:.03em;">ANTECIPAÇÃO</div>
-                        </div>`;
-      } else if (isOtif && isTop18) {
-        priorityHtml = `<div style="width:100%; border:1.8px solid #1a1a1a; text-align:center; padding:6px 9px; background:#F87171; border-radius:0; color:#111;">
-                          <div style="font-size:11px; font-weight:900; letter-spacing:.06em; margin-bottom:3px;">STATUS</div>
-                          <div style="font-size:18px; font-weight:900; letter-spacing:.03em;">OTIF / TOP 18</div>
-                        </div>`;
-      } else if (isOtif) {
-        priorityHtml = `<div style="width:100%; border:1.8px solid #1a1a1a; text-align:center; padding:6px 9px; background:#F87171; border-radius:0; color:#111;">
-                          <div style="font-size:11px; font-weight:900; letter-spacing:.06em; margin-bottom:3px;">STATUS</div>
-                          <div style="font-size:18px; font-weight:900; letter-spacing:.03em;">OTIF</div>
-                        </div>`;
-      } else if (isPriority) {
-        priorityHtml = `<div style="width:100%; border:1.8px solid #1a1a1a; text-align:center; padding:6px 9px; background:#BBF7D0; border-radius:0; color:#111;">
-                          <div style="font-size:11px; font-weight:900; letter-spacing:.06em; margin-bottom:3px;">STATUS</div>
-                          <div style="font-size:18px; font-weight:900; letter-spacing:.03em;">ADERENTE</div>
                         </div>`;
       } else {
         priorityHtml = `<div style="width:100%; border:1.8px solid #1a1a1a; text-align:center; padding:10px 10px; background:#fff; border-radius:0;">
@@ -5942,6 +6374,8 @@ function showCallPanel(driverName, isAlert) {
       dropHookManeuverDriver = null;
       dropHookManeuverPlate = '';
       dropHookAlsoUnload = false;
+      dropHookQuickMode = false;
+      baldeioQuickMode = false;
 
       renderCpfGate();
       clearTimeout(panelTimeout);
