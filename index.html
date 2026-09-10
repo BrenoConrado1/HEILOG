@@ -2496,191 +2496,116 @@
     }
 
 
-    /* ===== v26: grade de tabela + logo WOOW 100% HTML/CSS ===== */
+    /* ===== v27 SAFE PCL: tabela + logo HTML sem recursos gráficos especiais ===== */
 
-    /* Logo em HTML: nenhum PNG/background-image */
-    .xl-brand-html {
+    .xl-check-page,
+    .xl-check-page * {
+      font-family: Arial, Helvetica, sans-serif !important;
+      text-shadow: none !important;
+      box-shadow: none !important;
+      filter: none !important;
+    }
+
+    /* Logo 100% texto HTML simples: sem imagem, transform, skew ou efeitos */
+    .xl-brand-safe {
       width: 100%;
       height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
+      gap: 12px;
       white-space: nowrap;
       color: #000;
-      background: transparent !important;
-      font-family: Arial Black, Arial, Helvetica, sans-serif;
-      line-height: 1;
+      background: #fff;
+      font-family: Arial, Helvetica, sans-serif !important;
     }
 
-    .xl-brand-star {
-      display: inline-block;
-      font-size: 19px;
+    .xl-brand-safe-main {
+      font-size: 22px;
+      line-height: 1;
       font-weight: 900;
-      line-height: 1;
-      transform: translateY(-1px);
-      background: transparent !important;
+      letter-spacing: 0;
     }
 
-    .xl-brand-heineken {
-      display: inline-block;
-      font-size: 23px;
+    .xl-brand-safe-wow {
+      font-size: 21px;
+      line-height: 1;
       font-weight: 900;
-      letter-spacing: .4px;
-      line-height: 1;
-      background: transparent !important;
+      letter-spacing: -1px;
     }
 
-    .xl-brand-woow {
-      display: inline-flex;
-      align-items: center;
-      gap: 0px;
-      font-family: Arial Black, Arial, Helvetica, sans-serif;
-      font-size: 28px;
-      font-weight: 900;
-      letter-spacing: -3px;
-      line-height: 1;
-      transform: skew(-5deg);
-      background: transparent !important;
-    }
-
-    .xl-brand-woow > span {
-      display: inline-block;
-      background: transparent !important;
-    }
-
-    .xl-brand-o {
-      font-size: 25px;
-      transform: scaleX(.88);
-    }
-
-    /* Deixa a grade das perguntas realmente visível como tabela */
+    /* Grade simples, só border-collapse + linhas pretas */
     .xl-check-page .xl-question-table {
       width: 100% !important;
       border-collapse: collapse !important;
       border-spacing: 0 !important;
       border: 1px solid #000 !important;
-      background: transparent !important;
-    }
-
-    .xl-check-page .xl-question-table tr {
-      background: transparent !important;
     }
 
     .xl-check-page .xl-question-table td,
     .xl-check-page .xl-question-table th {
-      position: static !important;
-      top: auto !important;
       border: 1px solid #000 !important;
-      background: transparent !important;
-      box-shadow: none !important;
-      padding: 2px 3px !important;
+      padding: 1px 3px !important;
+      background: #fff !important;
+      color: #000 !important;
       vertical-align: middle !important;
     }
 
-    /* Cabeçalhos SIM / NÃO / N/A também com grade fechada */
-    .xl-check-page .xl-question-table th.xl-yn,
-    .xl-check-page .xl-question-table td.xl-yncell {
-      border-left: 1px solid #000 !important;
-      border-right: 1px solid #000 !important;
+    .xl-check-page .xl-question-table .xl-yn,
+    .xl-check-page .xl-question-table .xl-yncell {
+      border: 1px solid #000 !important;
       text-align: center !important;
     }
 
-    /* Tabelas e divisões principais com linhas consistentes */
-    .xl-check-page .xl-header-grid,
-    .xl-check-page .xl-check-table {
-      border-collapse: collapse !important;
-      border-spacing: 0 !important;
-    }
-
-    .xl-check-page .xl-header-grid td,
-    .xl-check-page .xl-check-table td,
-    .xl-check-page .xl-check-table th {
-      border: 1px solid #000 !important;
-      background: transparent !important;
-    }
-
-    /* Evita que o modo simples da v25 apague o logo HTML */
-    @media print {
-      .xl-check-page .xl-brand-html,
-      .xl-check-page .xl-brand-html *,
-      .xl-check-page .xl-question-table,
-      .xl-check-page .xl-question-table tr,
-      .xl-check-page .xl-question-table td,
-      .xl-check-page .xl-question-table th {
-        background: transparent !important;
-        background-image: none !important;
-      }
-
-      .xl-check-page .xl-question-table,
-      .xl-check-page .xl-question-table td,
-      .xl-check-page .xl-question-table th,
-      .xl-check-page .xl-header-grid td,
-      .xl-check-page .xl-check-table td,
-      .xl-check-page .xl-check-table th {
-        border-color: #000 !important;
-        border-style: solid !important;
-        border-width: 1px !important;
-      }
-    }
-
-
-
-    /* ===== v29: logo segura no checklist (HTML/CSS puro para impressão) ===== */
-    .xl-brand-printsafe,
-    .xl-brand-printsafe * {
-      background: #fff !important;
-      background-image: none !important;
-      color: #000 !important;
-      text-shadow: none !important;
-      box-shadow: none !important;
-      filter: none !important;
+    /* Remove qualquer recurso visual que possa empurrar o browser para gráfico */
+    .xl-check-page .xl-brand-safe,
+    .xl-check-page .xl-brand-safe *,
+    .xl-check-page table,
+    .xl-check-page tr,
+    .xl-check-page td,
+    .xl-check-page th,
+    .xl-check-page .xl-box,
+    .xl-check-page .xl-line {
       transform: none !important;
       border-radius: 0 !important;
-      font-family: Arial, Helvetica, sans-serif !important;
-    }
-
-    .xl-brand-printsafe {
-      width: 100%;
-      height: 100%;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 10px !important;
-      white-space: nowrap !important;
-      line-height: 1 !important;
-    }
-
-    .xl-brand-printsafe-heineken {
-      font-size: 22px !important;
-      font-weight: 900 !important;
-      letter-spacing: 0.2px !important;
-      line-height: 1 !important;
-    }
-
-    .xl-brand-printsafe-sep {
-      font-size: 20px !important;
-      font-weight: 700 !important;
-      line-height: 1 !important;
-    }
-
-    .xl-brand-printsafe-woow {
-      font-size: 21px !important;
-      font-weight: 900 !important;
-      letter-spacing: 0 !important;
-      line-height: 1 !important;
     }
 
     @media print {
-      .xl-check-page .xl-brand-printsafe,
-      .xl-check-page .xl-brand-printsafe * {
-        background: #fff !important;
-        background-image: none !important;
+      html,
+      body,
+      #printable-area,
+      .xl-check-page,
+      .xl-check-page * {
         color: #000 !important;
         text-shadow: none !important;
         box-shadow: none !important;
         filter: none !important;
-        transform: none !important;
+      }
+
+      .xl-check-page,
+      .xl-check-page div,
+      .xl-check-page span,
+      .xl-check-page table,
+      .xl-check-page tbody,
+      .xl-check-page tr,
+      .xl-check-page td,
+      .xl-check-page th {
+        background-image: none !important;
+      }
+
+      .xl-check-page .xl-brand-safe,
+      .xl-check-page .xl-brand-safe *,
+      .xl-check-page .xl-question-table td,
+      .xl-check-page .xl-question-table th {
+        background: #fff !important;
+      }
+
+      .xl-check-page .xl-question-table,
+      .xl-check-page .xl-question-table td,
+      .xl-check-page .xl-question-table th {
+        border-style: solid !important;
+        border-color: #000 !important;
+        border-width: 1px !important;
       }
     }
 
@@ -6302,7 +6227,7 @@
         // v25: Folha de Marcação e Checklist seguem o MESMO fluxo:
         // HTML normal -> window.print(), sem rasterização especial.
         try { document.getElementById('printable-area').offsetHeight; } catch {}
-        await heilogStableWindowPrint();
+        window.print();
       }
       catch (e) {
         console.error('Falha ao abrir impressão:', e);
@@ -6491,64 +6416,6 @@
 
       await waitForRasterAssets(printableArea);
       return true;
-    }
-
-
-
-    // ===== v30: estabilização antes da impressão =====
-    let __heilogPrintInProgress = false;
-
-    function heilogWait(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    async function heilogWaitForPrintStable() {
-      try {
-        if (document.fonts && document.fonts.ready) {
-          await Promise.race([
-            document.fonts.ready,
-            heilogWait(1500)
-          ]);
-        }
-      } catch {}
-
-      await new Promise(resolve =>
-        requestAnimationFrame(() => requestAnimationFrame(resolve))
-      );
-
-      try {
-        const printable = document.getElementById('printable-area');
-        if (printable) {
-          void printable.offsetWidth;
-          void printable.offsetHeight;
-          printable.getBoundingClientRect();
-        }
-      } catch {}
-
-      await heilogWait(900);
-    }
-
-    async function heilogStableWindowPrint() {
-      if (__heilogPrintInProgress) {
-        throw new Error('A impressão anterior ainda está sendo preparada. Aguarde alguns segundos.');
-      }
-
-      __heilogPrintInProgress = true;
-
-      try {
-        await heilogWaitForPrintStable();
-
-        try {
-          const printable = document.getElementById('printable-area');
-          if (printable) void printable.offsetHeight;
-        } catch {}
-
-        window.print();
-      } finally {
-        setTimeout(() => {
-          __heilogPrintInProgress = false;
-        }, 5000);
-      }
     }
 
 
@@ -6772,11 +6639,10 @@
               <tr>
                 <td class="xl-header-brand" style="width:33%;">
                   <div class="xl-brand-flex">
-                    <div class="xl-brand-printsafe" aria-label="Heineken WOOW">
-                      <span class="xl-brand-printsafe-heineken">HEINEKEN</span>
-                      <span class="xl-brand-printsafe-sep">|</span>
-                      <span class="xl-brand-printsafe-woow">WOOW</span>
-                    </div>
+                    <div class="xl-brand-safe" aria-label="Heineken WOOW">
+                    <span class="xl-brand-safe-main">HEINEKEN</span>
+                    <span class="xl-brand-safe-wow">WOOW</span>
+                  </div>
                   </div>
                 </td>
                 <td class="xl-header-title" style="width:45%;">CHECKLIST (DES) CARREGAMENTO</td>
@@ -7590,5 +7456,3 @@ function showCallPanel(driverName, isAlert) {
   </script>
 </body>
 </html>
-HEILOG_Impressao_Estavel_v30.html
-HTML
