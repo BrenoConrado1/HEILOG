@@ -2937,6 +2937,54 @@
     function normalizeDigits(v) { return String(v || '').replace(/\D/g, ''); }
     function normalizeDtId(dt) { return normalizeDigits(dt); }
 
+    // DT: só números e sem zeros no começo (bloqueia DT digitada só com zeros)
+    function cleanDtInput(value) {
+      return String(value || '').replace(/\D/g, '').replace(/^0+/, '');
+    }
+
+    function attachDtGuard(el) {
+      if (!el) return;
+      const warn = document.createElement('div');
+      warn.className = 'help';
+      warn.style.cssText = 'color:#b91c1c;font-weight:800;display:none;margin-top:4px;';
+      warn.textContent = '⚠️ A DT não pode ser só zero. Digite o número correto.';
+      el.insertAdjacentElement('afterend', warn);
+
+      el.addEventListener('input', () => {
+        const raw = String(el.value || '').replace(/\D/g, '');
+        const clean = cleanDtInput(raw);
+        const soZeros = raw.length > 0 && clean.length === 0;
+        if (el.value !== clean) el.value = clean;
+        warn.style.display = soZeros ? 'block' : 'none';
+        el.classList.toggle('invalid', soZeros);
+      });
+    }
+
+    // Placa: não preenche sozinha com a placa da última visita; mostra um botão para o motorista escolher
+    function setPlateSuggestion(inputId, plate) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const p = sanitizePlate(plate);
+      input.value = '';
+      document.getElementById(inputId + '-sugg')?.remove();
+      if (!isValidBrazilianPlate(p)) return;
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = inputId + '-sugg';
+      btn.className = 'btn-ghost w-full py-3 rounded-xl text-base font-bold';
+      btn.style.cssText = 'border:2px dashed #00904A; text-align:center;';
+      btn.innerHTML = `Mesmo veículo da última vez?<br>
+        <span style="font-size:1.4rem; letter-spacing:.12em; font-weight:900;">${p}</span><br>
+        <span style="font-size:.8rem; opacity:.75;">Toque aqui para usar esta placa</span>`;
+      btn.addEventListener('click', () => {
+        input.value = p;
+        input.classList.remove('invalid');
+        btn.remove();
+      });
+      input.insertAdjacentElement('afterend', btn);
+    }
+
     function generateInternalId(prefix) {
       const now = new Date();
       const pad = (n) => String(n).padStart(2, '0');
@@ -4711,16 +4759,18 @@
 
           const dtEl = document.getElementById('mode-dt');
           const unloadEl = document.getElementById('mode-unload-dt');
+          attachDtGuard(dtEl);
+          attachDtGuard(unloadEl);
 
           if (unloadEl && pendingUnloadDt) unloadEl.value = pendingUnloadDt;
 
           document.getElementById('mode-go')?.addEventListener('click', async () => {
             await unlockAudio();
-            const dt = dtEl?.value?.trim() || '';
-            if (!dt) return displayError('Digite a DT.', 4000);
+            const dt = cleanDtInput(dtEl?.value);
+            if (!dt) return displayError('Digite a DT da carga. Ela não pode ser só zero.', 5000, { field: dtEl });
             if (!isSheetReady || database.length === 0) return displayError('Planilha ainda não carregou. Tente novamente.', 4000);
 
-            pendingUnloadDt = needsUnload ? (unloadEl?.value || '').trim() : '';
+            pendingUnloadDt = needsUnload ? cleanDtInput(unloadEl?.value) : '';
             requireUnloadDtInForm = false;
             showUnloadInputs = !!needsUnload;
             performSearchByDt(dt);
@@ -4947,13 +4997,15 @@
 
           const cargaEl = document.getElementById('baldeio-dt-carga');
           const descEl = document.getElementById('baldeio-dt-desc');
+          attachDtGuard(cargaEl);
+          attachDtGuard(descEl);
           if (cargaEl && baldeioDtCarga) cargaEl.value = baldeioDtCarga;
           if (descEl && baldeioDtDescarga) descEl.value = baldeioDtDescarga;
 
           document.getElementById('baldeio-continue')?.addEventListener('click', async () => {
             await unlockAudio();
-            baldeioDtCarga = (cargaEl?.value || '').trim();
-            baldeioDtDescarga = (descEl?.value || '').trim();
+            baldeioDtCarga = cleanDtInput(cargaEl?.value);
+            baldeioDtDescarga = cleanDtInput(descEl?.value);
 
             const dtNorm = normalizeDtId(baldeioDtCarga);
 
@@ -5308,11 +5360,11 @@
     }
 
     function performSearchByDt(query) {
-      const q = query.trim();
+      const q = cleanDtInput(query);
       if (!q) { displayError("Digite um número de DT para buscar."); return; }
       if (database.length === 0) { displayError("Os dados da planilha ainda não foram carregados."); return; }
 
-      const results = database.filter(row => (row[headerMap.dts] || '').toString().trim().toLowerCase() === q.toLowerCase());
+      const results = database.filter(row => cleanDtInput(row[headerMap.dts]) === q);
       if (results.length > 0) {
         const deposito = results[0][headerMap.deposito] || '';
         const normalizedDeposito = deposito.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -5483,7 +5535,7 @@
             <div class="big-title text-white">Veículo</div>
 
             <input type="text" id="truck-plate" class="form-input input-xl" placeholder="Placa do cavalo">
-            <input type="text" id="trailer-plate" class="form-input input-xl" placeholder="Placa da carreta (opcional)">
+            <input type="text" id="trailer-plate" class="form-input input-xl" placeholder="Placa da carreta *">
 
             <select id="vehicle-type" class="form-select select-xl">
               <option value="">Tipo de veículo *</option>
@@ -5639,6 +5691,7 @@
       }
 
       const unloadEl = document.getElementById('unload-dt');
+      attachDtGuard(unloadEl);
       if (unloadEl && pendingUnloadDt) unloadEl.value = pendingUnloadDt;
 
       if (sessionDriver) {
@@ -5787,8 +5840,8 @@
       document.getElementById('driver-name').value = data.name || '';
       document.getElementById('driver-cnh').value = data.cnh || '';
       document.getElementById('cnh-expiry').value = data.cnhExpiry || '';
-      document.getElementById('truck-plate').value = sanitizePlate(data.truckPlate || '');
-      document.getElementById('trailer-plate').value = sanitizePlate(data.trailerPlate || '');
+      setPlateSuggestion('truck-plate', data.truckPlate);
+      setPlateSuggestion('trailer-plate', data.trailerPlate);
       document.getElementById('truck-axles').value = data.axles || '';
       const vehicleTypeEl = document.getElementById('vehicle-type');
       if (vehicleTypeEl) vehicleTypeEl.value = data.vehicleType || '';
@@ -5933,7 +5986,7 @@
             return;
           }
 
-          if (nextTrailer && !isValidBrazilianPlate(nextTrailer)) {
+          if (!isValidBrazilianPlate(nextTrailer)) {
             trailerInput?.classList.add('invalid');
             trailerInput?.focus();
             return;
@@ -6013,9 +6066,9 @@
       }
 
       if (!isQuickPlateMode() && !validateField(phoneEl, "Telefone é obrigatório.", () => (phoneMask?.unmaskedValue?.length || 0) >= 10)) return;
-      if (!validateField(plateEl, "Placa do cavalo é obrigatória.", () => isValidBrazilianPlate(plateEl?.value || ''))) return;
+      if (!validateField(plateEl, "Digite a placa do cavalo ou toque no botão da placa da última vez, se for o mesmo caminhão.", () => isValidBrazilianPlate(plateEl?.value || ''))) return;
       const trailerEl = document.getElementById('trailer-plate');
-      if (trailerEl?.value?.trim() && !validateField(trailerEl, "Placa da carreta inválida.", () => isValidBrazilianPlate(trailerEl?.value || ''))) return;
+      if (!validateField(trailerEl, "Digite a placa da carreta ou toque no botão da placa da última vez, se for a mesma carreta.", () => isValidBrazilianPlate(trailerEl?.value || ''))) return;
       const vehicleTypeEl = document.getElementById('vehicle-type');
       if (!isQuickPlateMode() && vehicleTypeEl && !validateField(vehicleTypeEl, "Tipo de veículo é obrigatório.")) return;
       const cnhEl = document.getElementById('driver-cnh');
